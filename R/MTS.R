@@ -325,31 +325,34 @@
          print(se,digits=4)
          jst=1
       }
-      cat("AR coefficient matrix:","\n")
+      if (output) cat("AR coefficient matrix:","\n")
       ### Phi is a storage for the AR coefficient matrices
       Phi=matrix(0,k,p*k)
       for (i in 1:nlags){
          ord=lags[i]
-         cat("AR(",ord,")-matrix:","\n")
+         if (output) cat("AR(",ord,")-matrix:","\n")
          phi=t(beta[(jst+1):(jst+k),])
          se=t(sdbeta[(jst+1):(jst+k),])
          print(phi,digits=3)
          cat("Standard error:","\n")
          print(se,digits=3)
          jst=jst+k
-         cat("      ","\n")
+         if (output) cat("      ","\n")
          kdx=(ord-1)*k
          Phi[,(kdx+1):(kdx+k)]=phi
       }
+      dd=det(sse)
+      d1=log(dd)
+      aic=d1+(2*nlags*k*k)/nT
+      bic=d1+log(nT)*nlags*k*k/nT
+
       cat("Residuals cov-mtx:","\n")
       print(sse)
 
       cat("       ","\n")
-      dd=det(sse)
+
       cat("det(SSE) = ",dd,"\n")
-      d1=log(dd)
-      aic=d1+(2*nlags*k*k)/nT
-      bic=d1+log(nT)*nlags*k*k/nT
+
       cat("AIC = ",aic,"\n")
       cat("BIC = ",bic,"\n")
       # end of if(output)
@@ -788,7 +791,7 @@
    #
    # Setup to compute MSE (due to estimated parameters.
    # Compute G-matrix and construct P-matrix
-   cat("orig ",orig,"\n")
+   if (output) cat("orig ",orig,"\n")
    ne=orig-p
    xmtx=NULL
    P=NULL
@@ -887,7 +890,7 @@
    print(mse[1:h,],digits=4)
    }
    if(orig < nT){
-      cat("Observations, predicted values,     errors, and MSE","\n")
+      if (output) cat("Observations, predicted values,     errors, and MSE","\n")
       tmp=NULL
       jend=min(nT,(orig+h))
       for (t in (orig+1):jend){
@@ -958,13 +961,15 @@
       }
       se=rbind(se,sqrt(diag(Sig)))
    }
-   cat("Forecasts at origin: ",orig,"\n")
-   print(px[(orig+1):(orig+h),],digits=4)
-   cat("Standard Errors of predictions: ","\n")
-   print(se[1:h,],digits=4)
+   if (output) {
+      cat("Forecasts at origin: ",orig,"\n")
+      print(px[(orig+1):(orig+h),],digits=4)
+      cat("Standard Errors of predictions: ","\n")
+      print(se[1:h,],digits=4)
+   }
    pred=px[(orig+1):(orig+h),]
    if(orig < nT){
-      cat("Observations, predicted values, and errors","\n")
+      if (output) cat("Observations, predicted values, and errors","\n")
       tmp=NULL
       jend=min(nT,(orig+h))
       for (t in (orig+1):jend){
@@ -978,7 +983,7 @@
       }
       tmp = tmp[,idx]
       ##print(tmp,digits=3)
-      print(round(tmp,4))
+      if (output) print(round(tmp,4))
    }
    VARfore <- list(pred=pred,se.err=se)
  }
@@ -1194,8 +1199,10 @@
    }
    pvs=QM[,4]
    dimnames(QM) = list(names(pvs),c("  m  ","    Q(m) ","   df  "," p-value"))
-   cat("Ljung-Box Statistics: ","\n")
-   printCoefmat(QM,digits = 3)
+   if (output) {
+      cat("Ljung-Box Statistics: ","\n")
+      printCoefmat(QM,digits = 3)
+   }
    #
    par(mfcol=c(1,1))
    plot(pvs,ylim=c(0,1),xlab="m",ylab="prob",main="p-values of Ljung-Box statistics")
@@ -1204,7 +1211,7 @@
 }
 
 ###
-"VMAorder" <- function(x,lag=20){
+"VMAorder" <- function(x, lag=20, output=TRUE){
    # Compute multivariate Ljung-Box test statistics
    # to identify the VMA order.
    #
@@ -1233,8 +1240,10 @@
    }
    pvs=QM[,3]
    dimnames(QM) = list(names(pvs),c("  j  ","  Q(j,m) "," p-value"))
-   cat("Q(j,m) Statistics: ","\n")
-   printCoefmat(QM,digits = 3)
+   if (output) {
+      cat("Q(j,m) Statistics: ","\n")
+      printCoefmat(QM,digits = 3)
+   }
    ## Plot
    par(mfcol=c(1,1))
    plot(pvs,ylim=c(0,1),xlab='j',ylab='prob',main="p-values: Q(j,m) Statistics")
@@ -1245,7 +1254,7 @@
 
 
 #### VMA programs
-"VMA" <- function(da,q=1,include.mean=T,fixed=NULL,beta=NULL,sebeta=NULL,prelim=F,details=F,thres=2.0){
+"VMA" <- function(da, q=1, include.mean=T, fixed=NULL, beta=NULL, sebeta=NULL, prelim=F, details=F, thres=2.0, output=TRUE){
    # Estimation of a vector MA model using conditional MLE (Gaussian dist)
    #
    # April 18: add subcommand "prelim" to see simplification after the AR approximation.
@@ -1434,8 +1443,10 @@
    LLKvma
   }
    #
-   cat("Number of parameters: ",length(par),"\n")
-   cat("initial estimates: ",round(par,4),"\n")
+   if (output) {
+      cat("Number of parameters: ",length(par),"\n")
+      cat("initial estimates: ",round(par,4),"\n")
+   }
    ### Set up lower and upper bounds
    lowerBounds=par; upperBounds=par
    npar=length(par)
@@ -1445,8 +1456,10 @@
       lowerBounds[j] = par[j]-mult*separ[j]
       upperBounds[j] = par[j]+mult*separ[j]
    }
-   cat("Par. Lower-bounds: ",round(lowerBounds,4),"\n")
-   cat("Par. Upper-bounds: ",round(upperBounds,4),"\n")
+   if (output) {
+      cat("Par. Lower-bounds: ",round(lowerBounds,4),"\n")
+      cat("Par. Upper-bounds: ",round(upperBounds,4),"\n")
+   }
    ###mm=optim(par,LLKvma,method=c("L-BFGS-B"),lower=lowerBounds,upper=upperBounds,hessian=TRUE)
    ###mm=optim(par,LLKvma,method=c("BFGS"),hessian=TRUE)
    ##est=mm$par
@@ -1478,19 +1491,21 @@
       }
    }
    est=fit$par
-   cat("Final   Estimates: ",est,"\n")
+   if (output) cat("Final   Estimates: ",est,"\n")
    # Step 6: Create and Print Summary Report:
    se.coef = sqrt(diag(solve(Hessian)))
    tval = fit$par/se.coef
    matcoef = cbind(fit$par, se.coef, tval, 2*(1-pnorm(abs(tval))))
    dimnames(matcoef) = list(names(tval), c(" Estimate",
    " Std. Error", " t value", "Pr(>|t|)"))
-   cat("\nCoefficient(s):\n")
-   printCoefmat(matcoef, digits = 4, signif.stars = TRUE)
-   #
-   ### recover to the format of unconstrained case for printing purpose.
-   cat("---","\n")
-   cat("Estimates in matrix form:","\n")
+   if (output) {
+      cat("\nCoefficient(s):\n")
+      printCoefmat(matcoef, digits = 4, signif.stars = TRUE)
+      #
+      ### recover to the format of unconstrained case for printing purpose.
+      cat("---","\n")
+      cat("Estimates in matrix form:","\n")
+   }
    icnt=0
    ist=0
    cnt=NULL
@@ -1503,11 +1518,13 @@
       if(icnt > 0){
          cnt[jdx]=est[1:icnt]
          secnt[jdx]=se.coef[1:icnt]
-         cat("Constant term: ","\n")
-         cat("Estimates: ",cnt,"\n")
+         if (output) {
+            cat("Constant term: ","\n")
+            cat("Estimates: ",cnt,"\n")
+         }
       }
    }
-   cat("MA coefficient matrix","\n")
+   if (output) cat("MA coefficient matrix","\n")
    TH=matrix(0,kq,k)
    seTH=matrix(1,kq,k)
    for (j in 1:k){
@@ -1521,9 +1538,11 @@
    }
    icnt=0
    for (i in 1:q){
-      cat("MA(",i,")-matrix","\n")
       theta=t(TH[(icnt+1):(icnt+k),])
-      print(theta,digits=3)
+      if (output) {
+         cat("MA(",i,")-matrix","\n")
+         print(theta,digits=3)
+      }
       icnt=icnt+k
    }
    ## Compute the residuals
@@ -1536,16 +1555,18 @@
    ### Use mFilter to compute residuals (April 18, 2012)
    at=mFilter(zt,t(TH))
    sig=t(at)%*%at/nT
-   cat(" ","\n")
-   cat("Residuals cov-matrix:","\n")
-   print(sig)
    dd=det(sig)
    d1=log(dd)
    aic=d1+2*npar/nT
    bic=d1+log(nT)*npar/nT
-   cat("----","\n")
-   cat("aic= ",aic,"\n")
-   cat("bic= ",bic,"\n")
+   if (output) {
+      cat(" ","\n")
+      cat("Residuals cov-matrix:","\n")
+      print(sig)
+      cat("----","\n")
+      cat("aic= ",aic,"\n")
+      cat("bic= ",bic,"\n")
+   }
    ### prepare for output storage
    Theta=t(TH)
    if(include.mean){
@@ -1595,7 +1616,7 @@
   }
 
 ####
-"VMAs" <- function(da,malags,include.mean=T,fixed=NULL,prelim=F,details=F,thres=2.0){
+"VMAs" <- function(da, malags, include.mean=T, fixed=NULL, prelim=F, details=F,thres=2.0, output=TRUE){
    # Estimation of a vector MA model using conditional MLE (Gaussian dist)
    # The MA lags are given specifically.
    #
@@ -1697,15 +1718,17 @@
          separ=c(separ,seTH[idx,j])
       }
    }
-   cat("Initial estimates: ",round(par,4),"\n")
    ### Set up lower and upper bounds
    lowerBounds=par; upperBounds=par
    for (j in 1:length(par)){
       lowerBounds[j] = par[j]-2*separ[j]
       upperBounds[j] = par[j]+2*separ[j]
    }
-   cat("Par. lower-bounds: ",round(lowerBounds,4),"\n")
-   cat("Par. upper-bounds: ",round(upperBounds,4),"\n")
+   if (output) {
+      cat("Initial estimates: ",round(par,4),"\n")
+      cat("Par. lower-bounds: ",round(lowerBounds,4),"\n")
+      cat("Par. upper-bounds: ",round(upperBounds,4),"\n")
+   }
 ###
 LLKvmas <- function(par,zt=da, include.mean=include.mean, MAlag=MAlag, fixed=fixed){
    ## the model used is
@@ -1806,18 +1829,20 @@ LLKvmas <- function(par,zt=da, include.mean=include.mean, MAlag=MAlag, fixed=fix
       }
    }
    est=fit$par
-   cat("Final    Estimates: ",est,"\n")
+   if (output) cat("Final    Estimates: ",est,"\n")
    # Step 6: Create and Print Summary Report:
    se.coef = sqrt(diag(solve(Hessian)))
    tval = fit$par/se.coef
    matcoef = cbind(fit$par, se.coef, tval, 2*(1-pnorm(abs(tval))))
    dimnames(matcoef) = list(names(tval), c(" Estimate",
    " Std. Error", " t value", "Pr(>|t|)"))
-   cat("\nCoefficient(s):\n")
-   printCoefmat(matcoef, digits = 4, signif.stars = TRUE)
+   if (output) {
+      cat("\nCoefficient(s):\n")
+      printCoefmat(matcoef, digits = 4, signif.stars = TRUE)
 
-   cat("---","\n")
-   cat("Estimates in matrix form:","\n")
+      cat("---","\n")
+      cat("Estimates in matrix form:","\n")
+   }
    icnt=0
    ist=0
    cnt=rep(0,k)
@@ -1830,11 +1855,13 @@ LLKvmas <- function(par,zt=da, include.mean=include.mean, MAlag=MAlag, fixed=fix
       if(icnt > 0){
          cnt[jdx]=est[1:icnt]
          secnt=se.coef[1:icnt]
-         cat("Constant term: ","\n")
-         cat("Estimates: ",cnt,"\n")
+         if (output) {
+            cat("Constant term: ","\n")
+            cat("Estimates: ",cnt,"\n")
+         }
       }
    }
-   cat("MA coefficient matrix","\n")
+   if (output) cat("MA coefficient matrix","\n")
    TH=matrix(0,kq,k)
    seTH=matrix(1,kq,k)
    for (j in 1:k){
@@ -1852,9 +1879,11 @@ LLKvmas <- function(par,zt=da, include.mean=include.mean, MAlag=MAlag, fixed=fix
    icnt=0
    for (i in 1:nlags){
       ii=MAlag[i]
-      cat("MA(",ii,")-matrix","\n")
       theta=t(TH[(icnt+1):(icnt+k),])
-      print(theta,digits=3)
+      if (output) {
+         cat("MA(",ii,")-matrix","\n")
+         print(theta,digits=3)
+      }
       icnt=icnt+k
    }
    ## Compute the residuals
@@ -1894,16 +1923,18 @@ LLKvmas <- function(par,zt=da, include.mean=include.mean, MAlag=MAlag, fixed=fix
    }
    #
    sig=t(at)%*%at/nT
-   cat(" ","\n")
-   cat("Residuals cov-matrix:","\n")
-   print(sig)
    dd=det(sig)
    d1=log(dd)
    aic=d1+2*npar/nT
    bic=d1+log(nT)*npar/nT
-   cat("---","\n")
-   cat("aic = ",aic,"\n")
-   cat("bic = ",bic,"\n")
+   if (output) {
+      cat(" ","\n")
+      cat("Residuals cov-matrix:","\n")
+      print(sig)
+      cat("---","\n")
+      cat("aic = ",aic,"\n")
+      cat("bic = ",bic,"\n")
+   }
    ###
    Theta=t(TH)
    if(include.mean){
@@ -2007,13 +2038,15 @@ LLKvmas <- function(par,zt=da, include.mean=include.mean, MAlag=MAlag, fixed=fix
       }
       se=rbind(se,sqrt(diag(Sig)))
    }
-   cat("Forecasts at origin: ",orig,"\n")
-   print(px[(orig+1):(orig+h),],digits=4)
-   cat("Standard Errors of predictions: ","\n")
-   print(se[1:h,],digits=4)
+   if (output) {
+      cat("Forecasts at origin: ",orig,"\n")
+      print(px[(orig+1):(orig+h),],digits=4)
+      cat("Standard Errors of predictions: ","\n")
+      print(se[1:h,],digits=4)
+   }
    pred=px[(orig+1):(orig+h),]
    if(orig < nT){
-      cat("Observations, predicted values, and errors","\n")
+      if (output) cat("Observations, predicted values, and errors","\n")
       tmp=NULL
       jend=min(nT,(orig+h))
       for (t in (orig+1):jend){
@@ -2026,14 +2059,14 @@ LLKvmas <- function(par,zt=da, include.mean=include.mean, MAlag=MAlag, fixed=fix
          idx=c(idx,c(0,1,2)*k+j+1)
       }
       tmp = tmp[,idx]
-      print(tmp,digits=3)
+      if (output) print(tmp,digits=3)
    }
 
    VMApred <- list(pred=pred,se.err=se)
 }
 
 ####
-"VARMA" <- function(da,p=0,q=0,include.mean=T,fixed=NULL,beta=NULL,sebeta=NULL,prelim=F,details=F,thres=2.0){
+"VARMA" <- function(da, p=0, q=0, include.mean=T, fixed=NULL, beta=NULL, sebeta=NULL, prelim=F, details=F, thres=2.0, output=TRUE){
    # Estimation of a vector ARMA model using conditional MLE (Gaussian dist)
    #
    # When prelim=TRUE, fixed is assigned based on the results of AR approximation.
@@ -2152,16 +2185,18 @@ LLKvmas <- function(par,zt=da, include.mean=include.mean, MAlag=MAlag, fixed=fix
        }
    }
    #########
-   cat("Number of parameters: ",length(par),"\n")
-   cat("initial estimates: ",round(par,4),"\n")
    ### Set up lower and upper bounds
    lowerBounds=par; upperBounds=par
    for (j in 1:length(par)){
       lowerBounds[j] = par[j]-2*separ[j]
       upperBounds[j] = par[j]+2*separ[j]
    }
-   cat("Par. lower-bounds: ",round(lowerBounds,4),"\n")
-   cat("Par. upper-bounds: ",round(upperBounds,4),"\n")
+   if (output) {
+      cat("Number of parameters: ",length(par),"\n")
+      cat("initial estimates: ",round(par,4),"\n")
+      cat("Par. lower-bounds: ",round(lowerBounds,4),"\n")
+      cat("Par. upper-bounds: ",round(upperBounds,4),"\n")
+   }
 
    # Step 5: Estimate Parameters and Compute Numerically Hessian:
    if(details){
@@ -2190,15 +2225,17 @@ LLKvmas <- function(par,zt=da, include.mean=include.mean, MAlag=MAlag, fixed=fix
       }
    }
    est=fit$par
-   cat("Final   Estimates: ",est,"\n")
    # Step 6: Create and Print Summary Report:
    se.coef = sqrt(diag(solve(Hessian)))
    tval = fit$par/se.coef
    matcoef = cbind(fit$par, se.coef, tval, 2*(1-pnorm(abs(tval))))
    dimnames(matcoef) = list(names(tval), c(" Estimate",
    " Std. Error", " t value", "Pr(>|t|)"))
-   cat("\nCoefficient(s):\n")
-   printCoefmat(matcoef, digits = 4, signif.stars = TRUE)
+   if (output) {
+      cat("Final   Estimates: ",est,"\n")
+      cat("\nCoefficient(s):\n")
+      printCoefmat(matcoef, digits = 4, signif.stars = TRUE)
+   }
    #
    ### restore estimates to the format of unconstrained case for printing purpose.
    #### icnt: parameter count
@@ -2261,28 +2298,32 @@ LLKvmas <- function(par,zt=da, include.mean=include.mean, MAlag=MAlag, fixed=fix
       sebeta=rbind(sebeta,seTH)
    }
    #########
-   cat("---","\n")
-   cat("Estimates in matrix form:","\n")
-   if(include.mean){
-      cat("Constant term: ","\n")
-      cat("Estimates: ",Ph0,"\n")
+   if (output) {
+      cat("---","\n")
+      cat("Estimates in matrix form:","\n")
+      if(include.mean){
+         cat("Constant term: ","\n")
+         cat("Estimates: ",Ph0,"\n")
+      }
    }
    if(p > 0){
-      cat("AR coefficient matrix","\n")
+      if (output) cat("AR coefficient matrix","\n")
       jcnt=0
       for (i in 1:p){
-         cat("AR(",i,")-matrix","\n")
          ph=t(PH[(jcnt+1):(jcnt+k),])
-         print(ph,digits=3)
+         if (output) {
+            cat("AR(",i,")-matrix","\n")
+            print(ph,digits=3)
+         }
          jcnt=jcnt+k
       }
       # end of if (p > 0)
    }
    if(q > 0){
-      cat("MA coefficient matrix","\n")
+      if (output) cat("MA coefficient matrix","\n")
       icnt=0
       for (i in 1:q){
-         cat("MA(",i,")-matrix","\n")
+         if (output) cat("MA(",i,")-matrix","\n")
          theta=-t(TH[(icnt+1):(icnt+k),])
          print(theta,digits=3)
          icnt=icnt+k
@@ -2354,16 +2395,18 @@ LLKvmas <- function(par,zt=da, include.mean=include.mean, MAlag=MAlag, fixed=fix
    at=at[(ist:nT),]
    sig=t(at)%*%at/(nT-pqmax)
    ##
-   cat(" ","\n")
-   cat("Residuals cov-matrix:","\n")
-   print(sig)
    dd=det(sig)
    d1=log(dd)
    aic=d1+2*npar/nT
    bic=d1+log(nT)*npar/nT
-   cat("----","\n")
-   cat("aic= ",aic,"\n")
-   cat("bic= ",bic,"\n")
+   if (output) {
+      cat(" ","\n")
+      cat("Residuals cov-matrix:","\n")
+      print(sig)
+      cat("----","\n")
+      cat("aic= ",aic,"\n")
+      cat("bic= ",bic,"\n")
+   }
    if(length(PH) > 0)PH=t(PH)
    if(length(TH) > 0)TH=-t(TH)
 
@@ -2409,7 +2452,7 @@ LLKvmas <- function(par,zt=da, include.mean=include.mean, MAlag=MAlag, fixed=fix
    refVARMA <- list(data=x,coef=mm$coef,secoef=mm$secoef,ARorder=p1,MAorder=q1,cnst=cnst,residuals=mm$residuals,Ph0=mm$Ph0,Phi=mm$Phi,Theta=mm$Theta,Sigma=mm$Sigma,aic=mm$aic,bic=mm$bic)
 }
 ######
-"VARMApred" <- function(model,h=1,orig=0){
+"VARMApred" <- function(model, h=1, orig=0, output=TRUE){
    ## Compute forecasts and forecast error covariance of a VARMA mdoel.
    ## created April 21, 2011 by Ruey S. Tsay
    #
@@ -2514,18 +2557,20 @@ LLKvmas <- function(par,zt=da, include.mean=include.mean, MAlag=MAlag, fixed=fix
       }
       sefcst=rbind(sefcst,sqrt(diag(Sig)))
    }
-   cat("Predictions at origin ",orig,"\n")
-   print(px[(orig+1):(orig+h),],digits=4)
-   cat("Standard errors of predictions","\n")
-   if(h == 1){
-      print(sefcst,digits=4)
-   }
-   else {
-      print(sefcst[1:h,],digits=4)
+   if (output) {
+      cat("Predictions at origin ",orig,"\n")
+      print(px[(orig+1):(orig+h),],digits=4)
+      cat("Standard errors of predictions","\n")
+      if(h == 1){
+         print(sefcst,digits=4)
+      }
+      else {
+         print(sefcst[1:h,],digits=4)
+      }
    }
    #### if orig < nT, print out actual values.
    if(orig < nT){
-      cat("Observations, predictions, and errors: ","\n")
+      if (output) cat("Observations, predictions, and errors: ","\n")
       tmp=NULL
       jend=min(nT,orig+h)
       for (t in (orig+1):jend){
@@ -2547,7 +2592,7 @@ LLKvmas <- function(par,zt=da, include.mean=include.mean, MAlag=MAlag, fixed=fix
 
 
 ###
-"VARecm" <- function(x,p=1,wt,include.const=FALSE){
+"VARecm" <- function(x, p=1, wt, include.const=FALSE, output=TRUE){
    # Fits an error-correction VAR model.
    if(!is.matrix(x))x=as.matrix(x)
    nT=dim(x)[1]
@@ -2589,43 +2634,47 @@ LLKvmas <- function(par,zt=da, include.mean=include.mean, MAlag=MAlag, fixed=fix
    for (i in 1:k){
       sdbeta[,i]=sqrt(sse[i,i]*dd)
    }
-   se=sdbeta[1,]
-   cat("alpha: ","\n")
-   print(alpha,digits=3)
-   cat("standard error","\n")
-   print(se,digits=3)
-   if(include.const){
-      cat("constant term:","\n")
-      print(c,digits=3)
-      se=sdbeta[2,]
+   if (output) {
+      se=sdbeta[1,]
+      cat("alpha: ","\n")
+      print(alpha,digits=3)
       cat("standard error","\n")
       print(se,digits=3)
-   }
+      if(include.const){
+         cat("constant term:","\n")
+         print(c,digits=3)
+         se=sdbeta[2,]
+         cat("standard error","\n")
+         print(se,digits=3)
+      }
 
-   cat("AR coefficient matrix","\n")
-   jst=icnt
-   for (i in 1:(p-1)){
-      cat("AR(",i,")-matrix","\n")
-      phi=t(beta[(jst+1):(jst+k),])
-      se=t(sdbeta[(jst+1):(jst+k),])
-      print(phi,digits=3)
-      cat("standard error","\n")
-      print(se,digits=3)
-      jst=jst+k
-      ###cat("      ","\n")
+      cat("AR coefficient matrix","\n")
+      jst=icnt
+      for (i in 1:(p-1)){
+         cat("AR(",i,")-matrix","\n")
+         phi=t(beta[(jst+1):(jst+k),])
+         se=t(sdbeta[(jst+1):(jst+k),])
+         print(phi,digits=3)
+         cat("standard error","\n")
+         print(se,digits=3)
+         jst=jst+k
+         ###cat("      ","\n")
+      }
    }
-   cat("-----","\n")
-   cat("Residuals cov-mtx:","\n")
-   print(sse)
-   #sse=sse*ne/T
-   cat("      ","\n")
    dd=det(sse)
-   cat("det(sse) = ",dd,"\n")
    d1=log(dd)
    aic=d1+(2*idm*k)/nT
    bic=d1+log(nT)*idm*k/nT
-   cat("AIC = ",aic,"\n")
-   cat("BIC = ",bic,"\n")
+   if (output) {
+      cat("-----","\n")
+      cat("Residuals cov-mtx:","\n")
+      print(sse)
+      #sse=sse*ne/T
+      cat("      ","\n")
+      cat("det(sse) = ",dd,"\n")
+      cat("AIC = ",aic,"\n")
+      cat("BIC = ",bic,"\n")
+   }
 
    VARecm<-list(coef=beta,aic=aic,bic=bic,residuals=resi,secoef=sdbeta,Sigma=sse)
 }
@@ -2651,7 +2700,7 @@ LLKvmas <- function(par,zt=da, include.mean=include.mean, MAlag=MAlag, fixed=fix
  }
 
 ####
-"tfm" <- function(y,x,b=0,s=1,p=0,q=0){
+"tfm" <- function(y, x, b=0, s=1, p=0, q=0, output=TRUE){
    # Estimate a special transfer function model. Specifically,
    # fit an ARMA(p,q) model to [y -(w0+w1*B+w2*B**2+...+ws*B**s)B**b x].
    # b: delay
@@ -2686,14 +2735,18 @@ LLKvmas <- function(par,zt=da, include.mean=include.mean, MAlag=MAlag, fixed=fix
       coef.arma=m1$coef[1:pq]
       se.arma=se[1:pq]
       p1=cbind(coef.arma,se.arma)
-      cat("ARMA coefficients & s.e.:","\n")
-      print(t(p1),digits=3)
+      if (output) {
+         cat("ARMA coefficients & s.e.:","\n")
+         print(t(p1),digits=3)
+      }
    }
    v=m1$coef[(pq+1):(pq+1+nx)]
    se.v=se[(pq+1):(pq+1+nx)]
-   pr=cbind(v,se.v)
-   cat("Transfer function coefficients & s.e.:","\n")
-   print(t(pr),digits=3)
+   if (output) {
+      pr=cbind(v,se.v)
+      cat("Transfer function coefficients & s.e.:","\n")
+      print(t(pr),digits=3)
+   }
    res=m1$residuals
    beta=matrix(v[2:(nx+1)],nx,1)
    nt=y1-v[1]-X%*%beta
@@ -2704,7 +2757,7 @@ LLKvmas <- function(par,zt=da, include.mean=include.mean, MAlag=MAlag, fixed=fix
 
 
 ####
-"tfm1" <- function(y,x,orderN,orderX){
+"tfm1" <- function(y, x, orderN, orderX, output=TRUE){
    ## Estimation of a transfer function model with ONE exogenous variable
    ### The model is Y_t -c0 -w(B)/d(B)X_t = theta(B)/phi(B)a_t.
    ### orderN = c(p,d,q) for the ARMA part
@@ -2814,14 +2867,18 @@ LLKvmas <- function(par,zt=da, include.mean=include.mean, MAlag=MAlag, fixed=fix
          coef.arma=est[1:pq]
          se.arma=se[1:pq]
          p1=cbind(coef.arma,se.arma)
-         cat("ARMA coefficients & s.e.:","\n")
-         print(t(p1),digits=3)
+         if (output) {
+            cat("ARMA coefficients & s.e.:","\n")
+            print(t(p1),digits=3)
+         }
       }
       v=est[(pq+1):(pq+1+nx)]
       se.v=se[(pq+1):(pq+1+nx)]
       pr=cbind(v,se.v)
-      cat("Transfer function coefficients & s.e.:","\n")
-      print(t(pr),digits=3)
+      if (output) {
+         cat("Transfer function coefficients & s.e.:","\n")
+         print(t(pr),digits=3)
+      }
    }
    else{
       ist=max(r,s)+1+b
@@ -2836,23 +2893,25 @@ LLKvmas <- function(par,zt=da, include.mean=include.mean, MAlag=MAlag, fixed=fix
       se=sqrt(diag(varcoef))
       residuals=Gaulike(est,dY=dY,dX=dX,orderN=orderN,orderX=orderX)
       sigma2=var(residuals)
-      pq=p+q
-      npar=length(est)
-      v=est[1:(npar-pq)]
-      se.v=se[1:(npar-pq)]
-      pr=cbind(v,se.v)
-      cat("Delay: ",b,"\n")
-      cat("Transfer function coefficients & s.e.:","\n")
-      cat("in the order: constant, omega, and delta:",c(1,s+1,r),"\n")
-      print(t(pr),digits=3)
-      if(pq > 0){
-         coef.arma=est[(npar-pq+1):npar]
-         se.arma=se[(npar-pq+1):npar]
-         p1=cbind(coef.arma,se.arma)
-         cat("ARMA order:","\n")
-         print(c(p,dify,q))
-         cat("ARMA coefficients & s.e.:","\n")
-         print(t(p1),digits=3)
+      if (output) {
+         pq=p+q
+         npar=length(est)
+         v=est[1:(npar-pq)]
+         se.v=se[1:(npar-pq)]
+         pr=cbind(v,se.v)
+         cat("Delay: ",b,"\n")
+         cat("Transfer function coefficients & s.e.:","\n")
+         cat("in the order: constant, omega, and delta:",c(1,s+1,r),"\n")
+         print(t(pr),digits=3)
+         if(pq > 0){
+            coef.arma=est[(npar-pq+1):npar]
+            se.arma=se[(npar-pq+1):npar]
+            p1=cbind(coef.arma,se.arma)
+            cat("ARMA order:","\n")
+            print(c(p,dify,q))
+            cat("ARMA coefficients & s.e.:","\n")
+            print(t(p1),digits=3)
+         }
       }
       #
    }
@@ -2861,7 +2920,7 @@ LLKvmas <- function(par,zt=da, include.mean=include.mean, MAlag=MAlag, fixed=fix
    tfm1 <- list(estimate=est,sigma2=sigma2,residuals=residuals,varcoef=varcoef, Nt=Nt)
 }
 
-"tfm2" <- function(y,x,x2=NULL,ct=NULL,wt=NULL,orderN=c(1,0,0),orderS=c(0,0,0),sea=12,order1=c(0,1,0),order2=c(0,-1,0)){
+"tfm2" <- function(y, x, x2=NULL, ct=NULL, wt=NULL, orderN=c(1,0,0), orderS=c(0,0,0), sea=12, order1=c(0,1,0), order2=c(0,-1,0), output=TRUE){
    ## Estimation of a transfer function model with TWO exogenous variables
    ### The model is Y_t- c0 -c1*c_t -c2*w_t - w(B)/d(B)X_t  - W(b)/D(B)X_{2t} = theta(B)*Theta(B)/[phi(B)*Phi(B)]a_t.
    ### orderN = c(p,d,q) for the regular ARMA part
@@ -3114,25 +3173,27 @@ LLKvmas <- function(par,zt=da, include.mean=include.mean, MAlag=MAlag, fixed=fix
 ###
       nx=dim(X)[2]
       se=sqrt(diag(m1$var.coef))
-      coef.arma=NULL
-      se.arma=NULL
-      pq=p+q
-      if(pq > 0){
-         coef.arma=est[1:pq]
-         se.arma=se[1:pq]
-         p1=cbind(coef.arma,se.arma)
-         cat("Regular ARMA coefficients & s.e.:","\n")
-         print(t(p1),digits=3)
-         if(p > 0)phi=coef.arma[1:p]
-         if(q > 0)theta=coef.arma[(p+1):pq]
+      if (output) {
+         pq=p+q
+         if(pq > 0){
+            coef.arma=est[1:pq]
+            se.arma=se[1:pq]
+            p1=cbind(coef.arma,se.arma)
+            cat("Regular ARMA coefficients & s.e.:","\n")
+            print(t(p1),digits=3)
+            if(p > 0)phi=coef.arma[1:p]
+            if(q > 0)theta=coef.arma[(p+1):pq]
+         }
       }
       PQ=P+Q
       if(PQ > 0){
        coef.sea=est[(pq+1):(pq+PQ)]
        se.sea=se[(pq+1):(pq+PQ)]
        psea=cbind(coef.sea,se.sea)
-       cat("Seasonal ARMA coefficients & s.e.: ","\n")
-       print(t(psea),digits=3)
+       if (output) {
+         cat("Seasonal ARMA coefficients & s.e.: ","\n")
+         print(t(psea),digits=3)
+       }
        if(P > 0)Phi=coef.sea[1:P]
        if(Q > 0)Theta=coef.sea[(P+1):PQ]
       }
@@ -3140,9 +3201,11 @@ LLKvmas <- function(par,zt=da, include.mean=include.mean, MAlag=MAlag, fixed=fix
       v=est[(icnt+1):(icnt+1+nx)]
       se.v=se[(icnt+1):(icnt+1+nx)]
       pr=cbind(v,se.v)
-      cat("Transfer function coefficients & s.e.:","\n")
-      print(t(pr),digits=3)
-      cat("Sigma-square & sigma: ",c(sigma2,sqrt(sigma2)),"\n")
+      if (output) {
+         cat("Transfer function coefficients & s.e.:","\n")
+         print(t(pr),digits=3)
+         cat("Sigma-square & sigma: ",c(sigma2,sqrt(sigma2)),"\n")
+      }
       omega=v[1:(s+1)]
       kcnt=s+1
       if(!is.null(dC))kcnt=kcnt+1
@@ -3179,30 +3242,34 @@ LLKvmas <- function(par,zt=da, include.mean=include.mean, MAlag=MAlag, fixed=fix
       v=est[1:icnt]
       se.v=se[1:icnt]
       pr=cbind(v,se.v)
-      cat("First exogenous variable: ","\n")
-      cat("Delay: ",b,"\n")
-      cat("Transfer function coefficients & s.e.:","\n")
-      cat("in the order: constant, omega, and delta:",c(1,s+1,r),"\n")
-      print(t(pr),digits=3)
+      if (output) {
+         cat("First exogenous variable: ","\n")
+         cat("Delay: ",b,"\n")
+         cat("Transfer function coefficients & s.e.:","\n")
+         cat("in the order: constant, omega, and delta:",c(1,s+1,r),"\n")
+         print(t(pr),digits=3)
+      }
       cnst=v[1]
       omega=v[2:(s+2)]
       if(r > 0)delta=v[(s+3):icnt]
       if(!is.null(dC)){icnt=icnt+1
-       cat("co-integrated coefficient & se: ",c(est[icnt],se[icnt]),"\n")
+          if (output) cat("co-integrated coefficient & se: ",c(est[icnt],se[icnt]),"\n")
        }
       if(!is.null(dW)){icnt=icnt+1
-        cat("Co-integration coefficient & se: ",c(est[icnt],se[icnt]),"\n")
+        if (output) cat("Co-integration coefficient & se: ",c(est[icnt],se[icnt]),"\n")
          }
       if(!is.null(dX2)){
        jcnt=1+s2+r2
        v=est[(icnt+1):(icnt+jcnt)]
        se.v=se[(icnt+1):(icnt+jcnt)]
        pr=cbind(v,se.v)
-       cat("Second exogenous variable: ","\n")
-       cat("Delay: ",b2,"\n")
-       cat("The transfer function coefficients & s.e.:","\n")
-       cat("in the order: omega2 and delta2: ",c(s2+1,r2),"\n")
-       print(t(pr),digits=3)
+       if (output) {
+          cat("Second exogenous variable: ","\n")
+          cat("Delay: ",b2,"\n")
+          cat("The transfer function coefficients & s.e.:","\n")
+          cat("in the order: omega2 and delta2: ",c(s2+1,r2),"\n")
+          print(t(pr),digits=3)
+       }
        Omega=v[1:(s2+1)]
        if(r2 > 0)Delta=v[(2+s2):jcnt]
        icnt=icnt+jcnt
@@ -3211,10 +3278,12 @@ LLKvmas <- function(par,zt=da, include.mean=include.mean, MAlag=MAlag, fixed=fix
          coef.arma=est[(icnt+1):(icnt+pq)]
          se.arma=se[(icnt+1):(icnt+pq)]
          p1=cbind(coef.arma,se.arma)
-         cat("Regular ARMA order:","\n")
-         print(c(p,dify,q))
-         cat("Regular ARMA coefficients & s.e.:","\n")
-         print(t(p1),digits=3)
+         if (output) {
+            cat("Regular ARMA order:","\n")
+            print(c(p,dify,q))
+            cat("Regular ARMA coefficients & s.e.:","\n")
+            print(t(p1),digits=3)
+         }
          icnt=icnt+pq
          if(p > 0)phi=coef.arma[1:p]
          if(q > 0)theta=coef.arma[(p+1):pq]
@@ -3223,14 +3292,16 @@ LLKvmas <- function(par,zt=da, include.mean=include.mean, MAlag=MAlag, fixed=fix
         coef.sea=est[(icnt+1):(icnt+PQ)]
         se.sea=se[(icnt+1):(icnt+PQ)]
         ps=cbind(coef.sea,se.sea)
-        cat("Seasonal ARMA order: ","\n")
-        print(c(P,difys,Q))
-        cat("Seasonal ARMA coefficients & s.e.: ","\n")
-        print(t(ps),digits=3)
+        if (output) {
+            cat("Seasonal ARMA order: ","\n")
+            print(c(P,difys,Q))
+            cat("Seasonal ARMA coefficients & s.e.: ","\n")
+            print(t(ps),digits=3)
+        }
         if(P > 0)Phi=coef.sea[1:P]
         if(Q > 0)Theta=coef.sea[(P+1):PQ]
        }
-    cat("Sigma-square & sigma: ",c(sigma2,sqrt(sigma2)),"\n")
+    if (output) cat("Sigma-square & sigma: ",c(sigma2,sqrt(sigma2)),"\n")
    }
 #
    Nt <- Nts(est,dY=dY,dX=dX,dX2=dX2,dW=dW,dC=dC,order1=order1,order2=order2)
@@ -3240,7 +3311,7 @@ omega=omega,delta=delta,omega2=Omega,delta2=Delta)
 }
 
 ### Back-testing
-"Btfm2" <- function(y,x,x2=NULL,wt=NULL,ct=NULL,orderN=c(1,0,0),orderS=c(0,0,0),sea=12,order1=c(0,1,0),order2=c(0,-1,0),orig=(length(y)-1)){
+"Btfm2" <- function(y, x, x2=NULL, wt=NULL, ct=NULL, orderN=c(1,0,0), orderS=c(0,0,0), sea=12, order1=c(0,1,0), order2=c(0,-1,0), orig=(length(y)-1), output=TRUE){
 err=NULL
 r=order1[1]; s=order1[2]; b=order1[3]
 r2=order2[1]; s2=order2[2]; b2=order2[3]
@@ -3415,13 +3486,15 @@ for (it in orig:(nT-1)){
  bias=mean(err); nf=length(err)
  mse=mean(err^2); mae=mean(abs(err))
  rmse=sqrt(mse)
- cat("Forecast origin & number of forecasts: ",c(orig,nf),"\n")
- cat("bias,  mse, rmse & MAE: ",c(bias, mse,rmse, mae),"\n")
+ if (output) {
+    cat("Forecast origin & number of forecasts: ",c(orig,nf),"\n")
+    cat("bias,  mse, rmse & MAE: ",c(bias, mse,rmse, mae),"\n")
+ }
  Btfm2 <- list(ferror=err,mse=mse,rmse=rmse,mae=mae,nobf=nf)
 }
 
 ####
-"VARchi" <- function(x,p=1,include.mean=T,thres=1.645){
+"VARchi" <- function(x, p=1, include.mean=T, thres=1.645, output=TRUE){
    # Fits a vector AR(p) model, then performs
    # a chi-square test to zero out insignificant parameters.
    if(!is.matrix(x))x=as.matrix(x)
@@ -3472,7 +3545,7 @@ for (it in orig:(nT-1)){
    }
    v=dim(K)[1]
    K=as.matrix(K)
-   cat("Number of targeted parameters: ",v,"\n")
+   if (output) cat("Number of targeted parameters: ",v,"\n")
    #####print(K)
    if(v > 0){
       C2=K%*%C1%*%t(K)
@@ -3480,16 +3553,16 @@ for (it in orig:(nT-1)){
       tmp=C2inv%*%as.matrix(omega,v,1)
       chi=sum(omega*tmp)
       pvalue=1-pchisq(chi,v)
-      cat("Chi-square test and p-value: ",c(chi,pvalue),"\n")
+      if (output) cat("Chi-square test and p-value: ",c(chi,pvalue),"\n")
    }
    else{
-      print("No contraints needed")
+      if (output) print("No contraints needed")
    }
    VARchi<-list(data=x,cnst=include.mean,order=p,coef=beta,constraints=K,omega=omega,covomega=C2)
 }
 
 ###
-"FEVdec" <- function(Phi,Theta,Sig,lag=4){
+"FEVdec" <- function(Phi, Theta, Sig, lag=4, output=TRUE){
    # Perform forecast error vcovariance decomposition
    #
    # Phi: k by kp matrix of AR coefficients, i.e. [AR1,AR2,AR3, ..., ARp]
@@ -3517,8 +3590,10 @@ for (it in orig:(nT-1)){
       m=dim(Theta)[2]
       q=floor(m/k)
     }
-   cat("Order of the ARMA mdoel: ","\n")
-   print(c(p,q))
+   if (output) {
+      cat("Order of the ARMA mdoel: ","\n")
+      print(c(p,q))
+   }
    # Consider the MA part to psi-weights
    Si=diag(rep(1,k))
    if(q > 0){
@@ -3590,16 +3665,18 @@ for (it in orig:(nT-1)){
       FeV=cbind(FeV,apply(wk,1,sum))
       OmeRa=cbind(OmeRa,wk/FeV[,(i+1)])
      }
-   cat("Standard deviation of forecast error: ","\n")
-   print(sqrt(FeV))
-   #
-   cat("Forecast-Error-Variance Decomposition","\n")
-   for (i in 1:(lag+1)){
-      idx=(i-1)*k
-      cat("Forecast horizon: ",i,"\n")
-      Ratio=OmeRa[,(idx+1):(idx+k)]
-      print(Ratio)
-    }
+   if (output) {
+      cat("Standard deviation of forecast error: ","\n")
+      print(sqrt(FeV))
+      #
+      cat("Forecast-Error-Variance Decomposition","\n")
+      for (i in 1:(lag+1)){
+         idx=(i-1)*k
+         cat("Forecast horizon: ",i,"\n")
+         Ratio=OmeRa[,(idx+1):(idx+k)]
+         print(Ratio)
+       }
+   }
    FEVdec <- list(irf=Si,orthirf=orSi,Omega=Ome,OmegaR=OmeRa)
   }
 
@@ -3683,7 +3760,7 @@ for (it in orig:(nT-1)){
 
 
 #### Exact likelihood VMA programs
-"VMAe" <- function(da,q=1,include.mean=T,coef0=NULL,secoef0=NULL,fixed=NULL,prelim=F,details=F,thres=2.0){
+"VMAe" <- function(da, q=1, include.mean=T, coef0=NULL, secoef0=NULL, fixed=NULL, prelim=F, details=F, thres=2.0, output=TRUE) {
    # Estimation of a vector MA model using EXACT MLE (Gaussian dist)
    ### coef0 and secoef0 are the initial estimates and their standard errors (mainly from the conditional estimates).
    #
@@ -3794,8 +3871,10 @@ for (it in orig:(nT-1)){
    }
    ###
    ParE <- par
-   cat("Number of parameters: ",length(par),"\n")
-   cat("initial estimates: ",par,"\n")
+   if (output) {
+      cat("Number of parameters: ",length(par),"\n")
+      cat("initial estimates: ",par,"\n")
+   }
    ### Set up lower and upper bounds
    lowerBounds=par; upperBounds=par
    npar=length(par)
@@ -3809,8 +3888,10 @@ for (it in orig:(nT-1)){
       lowerBounds[j] = par[j]-mult*separ[j]
       upperBounds[j] = par[j]+mult*separ[j]
    }
-   cat("Par. Lower-bounds: ",lowerBounds,"\n")
-   cat("Par. Upper-bounds: ",upperBounds,"\n")
+   if (output) {
+      cat("Par. Lower-bounds: ",lowerBounds,"\n")
+      cat("Par. Upper-bounds: ",upperBounds,"\n")
+   }
 ### likelihood function
  EVMAq <- function(par,zt=da,q=q,include.mean=include.mean,fixed=fixed,EstStep=T){
    # The model used is
@@ -4032,7 +4113,7 @@ for (it in orig:(nT-1)){
       est=est1
    }
    ### The above steps of checking invertibility were added on April 22, 2012.
-   cat("Final   Estimates: ",est,"\n")
+   if (output) cat("Final   Estimates: ",est,"\n")
    epsilon = 0.0001 * est
    npar=length(par)
    Hessian = matrix(0, ncol = npar, nrow = npar)
@@ -4056,12 +4137,14 @@ for (it in orig:(nT-1)){
    matcoef = cbind(est, se.coef, tval, 2*(1-pnorm(abs(tval))))
    dimnames(matcoef) = list(names(tval), c(" Estimate",
    " Std. Error", " t value", "Pr(>|t|)"))
+   if (output) {
    cat("\nCoefficient(s):\n")
-   printCoefmat(matcoef, digits = 4, signif.stars = TRUE)
-   #
-   ### recover to the format of unconstrained case for printing purpose.
-   cat("---","\n")
-   cat("Estimates in matrix form:","\n")
+      printCoefmat(matcoef, digits = 4, signif.stars = TRUE)
+      #
+      ### recover to the format of unconstrained case for printing purpose.
+      cat("---","\n")
+      cat("Estimates in matrix form:","\n")
+   }
    icnt=0
    ist=0
    cnt=NULL
@@ -4074,11 +4157,13 @@ for (it in orig:(nT-1)){
       if(icnt > 0){
          cnt[jdx]=est[1:icnt]
          secnt[jdx]=se.coef[1:icnt]
-         cat("Constant term: ","\n")
-         cat("Estimates: ",cnt,"\n")
+         if (output) {
+            cat("Constant term: ","\n")
+            cat("Estimates: ",cnt,"\n")
+         }
       }
    }
-   cat("MA coefficient matrix","\n")
+   if (output) cat("MA coefficient matrix","\n")
    TH=matrix(0,kq,k)
    seTH=matrix(1,kq,k)
    for (j in 1:k){
@@ -4092,9 +4177,11 @@ for (it in orig:(nT-1)){
    }
    icnt=0
    for (i in 1:q){
-      cat("MA(",i,")-matrix","\n")
       theta=t(TH[(icnt+1):(icnt+k),])
-      print(theta,digits=3)
+      if (output) {
+         cat("MA(",i,")-matrix","\n")
+         print(theta,digits=3)
+      }
       icnt=icnt+k
    }
    ## Compute the residuals
@@ -4117,16 +4204,18 @@ for (it in orig:(nT-1)){
       }
    }
    sig=t(at)%*%at/nT
-   cat(" ","\n")
-   cat("Residuals cov-matrix:","\n")
    print(sig)
    dd=det(sig)
    d1=log(dd)
    aic=d1+2*npar/nT
    bic=d1+log(T)*npar/nT
-   cat("----","\n")
-   cat("aic= ",aic,"\n")
-   cat("bic= ",bic,"\n")
+   if (output) {
+      cat(" ","\n")
+      cat("Residuals cov-matrix:","\n")
+      cat("----","\n")
+      cat("aic= ",aic,"\n")
+      cat("bic= ",bic,"\n")
+   }
    ### prepare fot output storage
    Theta=t(TH)
    if(include.mean){
@@ -4246,7 +4335,7 @@ for (it in orig:(nT-1)){
   }
 
 ##### Pi-weight calculation for a VARMA model.
-"PIwgt" <- function(Phi=NULL,Theta=NULL,lag=12,plot=TRUE){
+"PIwgt" <- function(Phi=NULL, Theta=NULL, lag=12, plot=TRUE, output=TRUE){
    ### Compute the psi-weight matrices of a VARMA(p,q) model,
    #### Phi=[phi1, phi2, ..., phip]
    #### Theta=[theta1,theta2,...,thetaq]
@@ -4259,7 +4348,7 @@ for (it in orig:(nT-1)){
    lag=floor(nc/k)-1
    WGT=c(diag(k))
    for (i in 1:lag){
-      cat("Lag: ",i," pi-matrix","\n")
+      if (output) cat("Lag: ",i," pi-matrix","\n")
       ist=(i-1)*k
       WGT=cbind(WGT,c(PImtx[,(ist+1):(ist+k)]))
       print(round(PImtx[,(ist+1):(ist+k)],5))
@@ -4401,7 +4490,7 @@ for (it in orig:(nT-1)){
    VARMAirf <- list(psi=PSI,irf=WGT)
  }
 
-"VARMAcov" <- function(Phi=NULL,Theta=NULL,Sigma=NULL,lag=12,trun=120){
+"VARMAcov" <- function(Phi=NULL, Theta=NULL, Sigma=NULL, lag=12, trun=120, output=TRUE){
    ## trun: trunction point for psi-weights used in the calculation.
    ##
    m1=PSIwgt(Phi=Phi,Theta=Theta,lag=trun,plot=FALSE)
@@ -4427,21 +4516,23 @@ for (it in orig:(nT-1)){
       covmtx=cbind(covmtx,Gami)
       cormtx=cbind(cormtx,SE%*%Gami%*%SE)
    }
-   for (i in 0:lag){
-      ist=i*k
-      cat("Auto-Covariance matrix of lag: ",i,"\n")
-      print(round(covmtx[,(ist+1):(ist+k)],5))
-   }
-   for (i in 0:lag){
-      ist=i*k
-      cat("cross correlation matrix of lag: ",i,"\n")
-      print(round(cormtx[,(ist+1):(ist+k)],4))
+   if (output) {
+      for (i in 0:lag){
+         ist=i*k
+         cat("Auto-Covariance matrix of lag: ",i,"\n")
+         print(round(covmtx[,(ist+1):(ist+k)],5))
+      }
+      for (i in 0:lag){
+         ist=i*k
+         cat("cross correlation matrix of lag: ",i,"\n")
+         print(round(cormtx[,(ist+1):(ist+k)],4))
+      }
    }
 
    VARMAcov <- list(autocov=covmtx,ccm=cormtx)
 }
 
-"Eccm" <- function(zt,maxp=5,maxq=6,include.mean=FALSE,rev=TRUE){
+"Eccm" <- function(zt, maxp=5, maxq=6, include.mean=FALSE, rev=TRUE, output=TRUE){
    ### Compute extended cross-correlation matrices using iterated regression
    ### fitting instead of the recursive method.
    #### rev: a switch to compute Q(m) statistics from q to maxq.
@@ -4557,13 +4648,15 @@ for (it in orig:(nT-1)){
          pEccm=rbind(pEccm,pv1)
        }
     }
-   cat("p-values table of Extended Cross-correlation Matrices:","\n")
-   cat("Column: MA order","\n")
-   cat("Row   : AR order","\n")
    colnames(pEccm) <- c(c(0:maxq))
    rownames(pEccm) <- c(c(0:maxp))
-   tmp=round(pEccm,4)
-   printCoefmat(tmp)
+      if (output) {
+         cat("p-values table of Extended Cross-correlation Matrices:","\n")
+         cat("Column: MA order","\n")
+         cat("Row   : AR order","\n")
+         tmp=round(pEccm,4)
+         printCoefmat(tmp)
+      }
     Eccm <- list(pEccm=pEccm,vEccm=vEccm,ARcoef=ARcoef)
   }
 
@@ -4619,7 +4712,7 @@ for (it in orig:(nT-1)){
    revmq <- list(ccm=ccm,rqm=rqm,pvalue=pvs)
  }
 
-"Kronid" <- function(x,plag=5,crit=0.05){
+"Kronid" <- function(x, plag=5, crit=0.05, output=TRUE){
    # Identifies the Kronecker indexes for a vector time series
    # plag is the number of lags used to represent the PAST vector
    if(!is.matrix(x))x=as.matrix(x)
@@ -4643,10 +4736,10 @@ for (it in orig:(nT-1)){
    h=0
    ist=plag+1
    futu1=as.matrix(y[ist:nT,])
-   cat("h = ",h,"\n")
+   if (output) cat("h = ",h,"\n")
    #print(h)
    for (i in 1:k){
-      cat("Component = ",i,"\n")
+      if (output) cat("Component = ",i,"\n")
       s1=c(i)
       if(i > 1){
          fnd=found[1:(i-1)]
@@ -4659,12 +4752,14 @@ for (it in orig:(nT-1)){
       dp=dim(past)[2]
       deg=dp-df+1
       seig=m1$cor[df]^2
-      cat("square of the smallest can. corr. = ",seig,"\n")
+      if (output) cat("square of the smallest can. corr. = ",seig,"\n")
       tst=-(nT-1-0.5*(dp+df-1))*log(1-seig)
       pv=1-pchisq(tst,deg)
       stat=c(tst,deg,pv)
-      cat("    test,   df, &  p-value:","\n")
-      print(round(stat,3))
+      if (output) {
+         cat("    test,   df, &  p-value:","\n")
+         print(round(stat,3))
+      }
       if(i>1){
          cstar=cbind(cstar,stat)
       }
@@ -4674,20 +4769,20 @@ for (it in orig:(nT-1)){
       if(pv > crit){
          found[i]=1
          kdx[i]=h
-         cat("A Kronecker index found","\n")
+         if (output) cat("A Kronecker index found","\n")
       }
    }
-   cat("=============","\n")
+   if (output) cat("=============","\n")
    while(sum(found) < k){
       idim=dim(past)[1]
       h=h+1
-      cat("h = ",h,"\n")
+      if (output) cat("h = ",h,"\n")
       past=past[1:(idim-1),]
       futu=futu[1:(idim-1),]
       futu1=y[(ist+h):nT,]
       for (ii in 1:k){
          if(found[ii]==0){
-            cat("Component = ",ii,"\n")
+            if (output) cat("Component = ",ii,"\n")
             #print(ii)
             futu=cbind(futu,futu1[,ii])
             m1=cancor(past,futu)
@@ -4695,7 +4790,7 @@ for (it in orig:(nT-1)){
             dp=dim(past)[2]
             deg=dp-df+1
             seig=m1$cor[df]^2
-            cat("Square of the smallest can. corr. = ",seig,"\n")
+            if (output) cat("Square of the smallest can. corr. = ",seig,"\n")
             y1=futu%*%(m1$ycoef[,df])
             x1=past%*%(m1$xcoef[,df])
             m2=acf(y1,lag.max=h,plot=F)
@@ -4707,27 +4802,31 @@ for (it in orig:(nT-1)){
             tst=-(nT-1-0.5*(dp+df-1))*log(1-seig)
             pv=1-pchisq(tst,deg)
             stat=c(tst,deg,pv,dsq)
-            cat("    test,     df, p-value & d-hat:","\n")
-            print(round(stat,3))
+            if (output) {
+               cat("    test,     df, p-value & d-hat:","\n")
+               print(round(stat,3))
+            }
             stat=stat[1:3]
             cstar=cbind(cstar,stat)
             if(pv > crit){
                found[ii]=1
                kdx[ii]=h
                futu=futu[,1:(df-1)]
-               cat("A Kronecker found","\n")
+               if (output) cat("A Kronecker found","\n")
             }
          }
       }
-      cat("============","\n")
+      if (output) cat("============","\n")
    }
-   cat("   ","\n")
-   cat("Kronecker indexes identified:","\n")
-   print(kdx)
+   if (output) {
+      cat("   ","\n")
+      cat("Kronecker indexes identified:","\n")
+      print(kdx)
+   }
    Kronid<-list(index=kdx,tests=cstar)
  }
 
-"Kronspec" <- function(kdx,output=TRUE){
+"Kronspec" <- function(kdx, output=TRUE){
    # Specify a VARMA model for a given set of Kronecker indices
    #
    # Output: 1 = No estimation (the coefficient of Z_{it}
@@ -4792,7 +4891,7 @@ for (it in orig:(nT-1)){
    Kronspec <- list(PhiID=Phi,ThetaID=Theta)
  }
 
-"Kronfit" <- function(da,kidx,include.mean=T,fixed=NULL,Kpar=NULL,seKpar=NULL,prelim=F,details=F,thres=1.0){
+"Kronfit" <- function(da, kidx, include.mean=T, fixed=NULL, Kpar=NULL, seKpar=NULL, prelim=F, details=F, thres=1.0){
    # Estimation of a vector ARMA model using conditional MLE (Gaussian dist)
    #  The model is specified via Kronecker indices.
    # When prelim=TRUE, fixed is assigned based on the results of AR approximation.
@@ -4903,16 +5002,18 @@ for (it in orig:(nT-1)){
    par=Kpar[JJdx]
    separ= seKpar[JJdx]
    #########
-   cat("Number of parameters: ",length(par),"\n")
-   cat("initial estimates: ",round(par,4),"\n")
    ### Set up lower and upper bounds
    lowerBounds=par; upperBounds=par
    for (j in 1:length(par)){
       lowerBounds[j] = par[j]-2*separ[j]
       upperBounds[j] = par[j]+2*separ[j]
    }
-   cat("Upper-bound: ",round(upperBounds,4),"\n")
-   cat("Lower-bound: ",round(lowerBounds,4),"\n")
+   if (output) {
+      cat("Number of parameters: ",length(par),"\n")
+      cat("initial estimates: ",round(par,4),"\n")
+      cat("Upper-bound: ",round(upperBounds,4),"\n")
+      cat("Lower-bound: ",round(lowerBounds,4),"\n")
+   }
 ### likelihood function
  LLKron <- function(par,zt=da,JJdx=JJdx,kidx=kidx,ARid=ARid,MAid=MAid,Kpar=Kpar,include.mean=include.mean){
    k=dim(zt)[2]
@@ -5046,8 +5147,10 @@ for (it in orig:(nT-1)){
    matcoef = cbind(fit$par, se.coef, tval, 2*(1-pnorm(abs(tval))))
    dimnames(matcoef) = list(names(tval), c(" Estimate",
    " Std. Error", " t value", "Pr(>|t|)"))
-   cat("\nCoefficient(s):\n")
-   printCoefmat(matcoef, digits = 4, signif.stars = TRUE)
+   if (output) {
+      cat("\nCoefficient(s):\n")
+      printCoefmat(matcoef, digits = 4, signif.stars = TRUE)
+   }
    Kpar[JJdx]=fit$par
    seKpar[JJdx]=se.coef
    # Restore estimates to the format of unconstrained case for printing.
@@ -5096,28 +5199,35 @@ for (it in orig:(nT-1)){
          icnt=icnt+jend
       }
    }
-   cat("---","\n")
-   cat("Estimates in matrix form:","\n")
-   if(include.mean){
-      cat("Constant term: ","\n")
-      cat("Estimates: ",round(Cnt,3),"\n")
+   if (output) {
+      cat("---","\n")
+      cat("Estimates in matrix form:","\n")
+      if(include.mean){
+         cat("Constant term: ","\n")
+         cat("Estimates: ",round(Cnt,3),"\n")
+      }
+      cat("AR and MA lag-0 coefficient matrix","\n")
+      print(round(Ph0,3))
+      cat("AR coefficient matrix","\n")
    }
-   cat("AR and MA lag-0 coefficient matrix","\n")
-   print(round(Ph0,3))
-   cat("AR coefficient matrix","\n")
    jcnt=0
    for (i in 1:maxk){
-      cat("AR(",i,")-matrix","\n")
       ph=PH[,(jcnt+1):(jcnt+k)]
-      print(round(ph,3))
+      if (output) {
+         cat("AR(",i,")-matrix","\n")
+         print(round(ph,3))
+      }
       jcnt=jcnt+k
    }
-   cat("MA coefficient matrix","\n")
+   if (output) cat("MA coefficient matrix","\n")
    icnt=0
    for (i in 1:maxk){
-      cat("MA(",i,")-matrix","\n")
+
       theta=-TH[,(icnt+1):(icnt+k)]
-      print(round(theta,3))
+      if (output) {
+         cat("MA(",i,")-matrix","\n")
+         print(round(theta,3))
+      }
       icnt=icnt+k
    }
    ##### Compute the residuals
@@ -5178,16 +5288,18 @@ for (it in orig:(nT-1)){
    }
     at=at[(ist:nT),]
    sig=crossprod(at,at)/(nT-maxk)
-   cat(" ","\n")
-   cat("Residuals cov-matrix:","\n")
-   print(sig)
    dd=det(sig)
    d1=log(dd)
    aic=d1+2*npar/nT
    bic=d1+log(nT)*npar/nT
-   cat("----","\n")
-   cat("aic= ",aic,"\n")
-   cat("bic= ",bic,"\n")
+   if (output) {
+      cat(" ","\n")
+      cat("Residuals cov-matrix:","\n")
+      print(sig)
+      cat("----","\n")
+      cat("aic= ",aic,"\n")
+      cat("bic= ",bic,"\n")
+   }
 
    Kronfit <- list(data=da,Kindex=kidx,ARid=ARid,MAid=MAid,cnst=include.mean,coef=Kpar,secoef=seKpar,residuals=at,Sigma=sig,aic=aic,bic=bic, Ph0=Ph0,Phi=PH,Theta=-TH,const=Cnt)
 }
@@ -5226,7 +5338,7 @@ for (it in orig:(nT-1)){
    refKronfit <- list(data=zt,Kindex=kidx,ARid=ARid,MAid=MAid,cnst=inc.mean,coef=Kpar,secoef=seKpar,residuals=at,Sigma=sig,aic=aic,bic=bic, Ph0=Ph0,Phi=PH,Theta=-TH,const=Cnt)
 }
 
-"sVARMA" <- function(da,order=c(0,0,0),sorder=c(0,0,0),s=12,include.mean=T,fixed=NULL,details=F,switch=F){
+"sVARMA" <- function(da, order=c(0,0,0), sorder=c(0,0,0), s=12, include.mean=T, fixed=NULL, details=F, switch=F, output=TRUE){
    # Estimation of a multiplicative vector ARMA model using conditional MLE (Gaussian dist)
    if(!is.matrix(da))da=as.matrix(da)
    p=order[1];d=order[2];q=order[3];P=sorder[1];D=sorder[2];Q=sorder[3]
@@ -5234,11 +5346,11 @@ for (it in orig:(nT-1)){
    # basic setup.
    if(p < 0)p=0; if(q < 0)q=0; if(P < 0) P = 0; if(Q < 0) Q = 0; if(s < 0) s=-s
    if(d > 1){
-      cat("Regular difference is adjusted to d=1","\n")
+      if (output) cat("Regular difference is adjusted to d=1","\n")
       d=1
    }
    if(D > 1){
-      cat("Seasonal difference is adjusted to D=1","\n")
+      if (output) cat("Seasonal difference is adjusted to D=1","\n")
       D=1
    }
    kp=k*p
@@ -5506,8 +5618,10 @@ siniEST <- function(y,x,arlags,malags,include.mean){
    #### keep the first few residuals to be used in likelihood evaluation to compute "at".
    jst=max(arlags,malags)
    Sresi <- resi[1:jst,]
-   cat("Number of parameters: ",length(par),"\n")
-   cat("initial estimates: ",par,"\n")
+   if (output) {
+      cat("Number of parameters: ",length(par),"\n")
+      cat("initial estimates: ",par,"\n")
+   }
    lowerBounds=par; upperBounds=par
    for (j in 1:length(par)){
       lowerBounds[j] = par[j]-2*separ[j]
@@ -5683,8 +5797,10 @@ LLKsvarma <- function(par,zt=DX,Order=Order,ARlags=arlags,MAlags=malags,include.
    matcoef = cbind(fit$par, se.coef, tval, 2*(1-pnorm(abs(tval))))
    dimnames(matcoef) = list(names(tval), c(" Estimate",
    " Std. Error", " t value", "Pr(>|t|)"))
-   cat("\nCoefficient(s):\n")
-   printCoefmat(matcoef, digits = 4, signif.stars = TRUE)
+   if (output) {
+      cat("\nCoefficient(s):\n")
+      printCoefmat(matcoef, digits = 4, signif.stars = TRUE)
+   }
    est=fit$par
    ### restore estimates to the format of unconstrained case for printing purpose.
    ist=0
@@ -5771,49 +5887,59 @@ LLKsvarma <- function(par,zt=DX,Order=Order,ARlags=arlags,MAlags=malags,include.
       beta=rbind(beta,-sTH)
       sebeta=rbind(sebeta,sesTH)
    }
-   cat("---","\n")
-   cat("Estimates in matrix form:","\n")
-   if(include.mean){
-      cat("Constant term: ","\n")
-      cat("Estimates: ",Ph0,"\n")
+   if (output) {
+      cat("---","\n")
+      cat("Estimates in matrix form:","\n")
+      if(include.mean){
+         cat("Constant term: ","\n")
+         cat("Estimates: ",Ph0,"\n")
+      }
    }
    if(p > 0){
-      cat("Regular AR coefficient matrix","\n")
+      if (output) cat("Regular AR coefficient matrix","\n")
       jcnt=0
       for (i in 1:p){
-         cat("AR(",i,")-matrix","\n")
          ph=t(PH[(jcnt+1):(jcnt+k),])
-         print(ph,digits=3)
+         if (output) {
+            cat("AR(",i,")-matrix","\n")
+            print(ph,digits=3)
+         }
          jcnt=jcnt+k
       }
     }
     if(P > 0){
-      cat("Seasonal AR coefficient matrix","\n")
+      if (output) cat("Seasonal AR coefficient matrix","\n")
       jcnt=0
       for (i in 1:P){
-         cat("AR(",i*s,")-matrix","\n")
          ph=t(sPH[(jcnt+1):(jcnt+k),])
-         print(ph,digits=3)
+         if (output) {
+             cat("AR(",i*s,")-matrix","\n")
+            print(ph,digits=3)
+         }
          jcnt=jcnt+k
       }
     }
    if(q > 0){
-      cat("Regular MA coefficient matrix","\n")
+      if (output) cat("Regular MA coefficient matrix","\n")
       icnt=0
       for (i in 1:q){
-         cat("MA(",i,")-matrix","\n")
          the=t(TH[(icnt+1):(icnt+k),])
-         print(the,digits=3)
+         if (output) {
+            cat("MA(",i,")-matrix","\n")
+            print(the,digits=3)
+         }
          icnt=icnt+k
       }
     }
    if(Q > 0){
-      cat("Seasonal MA coefficient matrix","\n")
+      if (output) cat("Seasonal MA coefficient matrix","\n")
       icnt=0
       for (i in 1:Q){
-         cat("MA(",i*s,")-matrix","\n")
          the=t(sTH[(icnt+1):(icnt+k),])
-         print(the,digists=3)
+         if (output) {
+            cat("MA(",i*s,")-matrix","\n")
+            print(the,digists=3)
+         }
          icnt=icnt+k
       }
     }
@@ -5869,16 +5995,18 @@ LLKsvarma <- function(par,zt=DX,Order=Order,ARlags=arlags,MAlags=malags,include.
    c1 = rep("resi",k)
    colnames(at) <- c1
    sig=t(at)%*%at/(nT-pqmax)
-   cat(" ","\n")
-   cat("Residuals cov-matrix:","\n")
-   print(sig)
    dd=det(sig)
    d1=log(dd)
    aic=d1+2*npar/nT
    bic=d1+log(nT)*npar/nT
-   cat("----","\n")
-   cat("aic= ",round(aic,4),"\n")
-   cat("bic= ",round(bic,4),"\n")
+   if (output) {
+      cat(" ","\n")
+      cat("Residuals cov-matrix:","\n")
+      print(sig)
+      cat("----","\n")
+      cat("aic= ",round(aic,4),"\n")
+      cat("bic= ",round(bic,4),"\n")
+   }
    if(length(PH) > 0)PH=t(PH)
    if(length(sPH) > 0)sPH=t(sPH)
    if(length(TH) > 0)TH=t(TH)
@@ -5971,7 +6099,7 @@ LLKsvarma <- function(par,zt=DX,Order=Order,ARlags=arlags,MAlags=malags,include.
 
 }
 
-"VARX" <- function(zt,p,xt=NULL,m=0,include.mean=T,fixed=NULL,output=T){
+"VARX" <- function(zt, p, xt=NULL, m=0, include.mean=T, fixed=NULL, output=T){
    #This command fits the model
    ## z(t) = c0 + sum_{i=1}^p phi_i * z(t-i) + \sum_{j=0}^m xt(t-j) + a(t).
    ##
@@ -6058,26 +6186,30 @@ LLKsvarma <- function(par,zt=DX,Order=Order,ARlags=arlags,MAlags=malags,include.
    icnt=0
    if(include.mean){
       Ph0=beta[1,]; icnt=icnt+1
-      cat("constant term: ","\n")
-      cat("est: ",round(Ph0,4),"\n")
-      cat(" se: ",round(se.beta[1,],4),"\n")
+      if (output) {
+         cat("constant term: ","\n")
+         cat("est: ",round(Ph0,4),"\n")
+         cat(" se: ",round(se.beta[1,],4),"\n")
+      }
    }
    Phi=NULL
    if(p > 0){
       Phi=t(beta[(icnt+1):(icnt+k*p),])
       sePhi=t(se.beta[(icnt+1):(icnt+k*p),])
       for (j in 1:p){
-         cat("AR(",j,") matrix","\n")
          jcnt=(j-1)*k
-         print(round(Phi[,(jcnt+1):(jcnt+k)],3))
-         cat("standard errors","\n")
-         print(round(sePhi[,(jcnt+1):(jcnt+k)],3))
+         if (output) {
+            cat("AR(",j,") matrix","\n")
+            print(round(Phi[,(jcnt+1):(jcnt+k)],3))
+            cat("standard errors","\n")
+            print(round(sePhi[,(jcnt+1):(jcnt+k)],3))
+         }
       }
       icnt=icnt+k*p
       ## end of if(p > 0)
    }
    if(m > -1){
-      cat("Coefficients of exogenous","\n")
+      if (output) cat("Coefficients of exogenous","\n")
       Beta=t(beta[(icnt+1):(icnt+(m+1)*kx),])
       seBeta=t(se.beta[(icnt+1):(icnt+(m+1)*kx),])
       if(kx == 1){
@@ -6086,27 +6218,31 @@ LLKsvarma <- function(par,zt=DX,Order=Order,ARlags=arlags,MAlags=malags,include.
        }
       for (i in 0:m){
          jdx=i*kx
-         cat("lag-",i," coefficient matrix","\n")
-         print(round(Beta[,(jdx+1):(jdx+kx)],3))
-         cat("standard errors","\n")
-         print(round(seBeta[,(jdx+1):(jdx+kx)],3))
+         if (output) {
+            cat("lag-",i," coefficient matrix","\n")
+            print(round(Beta[,(jdx+1):(jdx+kx)],3))
+            cat("standard errors","\n")
+            print(round(seBeta[,(jdx+1):(jdx+kx)],3))
+         }
       }
       ## end of if(m > -1)
    }
    ##
-   cat("Residual Covariance Matrix","\n")
-   print(round(sig,5))
-   cat("===========","\n")
-   cat("Information criteria: ","\n")
-   cat("AIC: ",aic,"\n")
-   cat("BIC: ",bic,"\n")
+   if (output) {
+      cat("Residual Covariance Matrix","\n")
+      print(round(sig,5))
+      cat("===========","\n")
+      cat("Information criteria: ","\n")
+      cat("AIC: ",aic,"\n")
+      cat("BIC: ",bic,"\n")
+   }
 
    VARX <- list(data=zt,xt=xt,aror=p,m=m,Ph0=Ph0,Phi=Phi,beta=Beta,residuals=resi,Sigma=sig,
    coef=beta,se.coef=se.beta,include.mean=include.mean)
 }
 
 ##### Refine VARX model
-"refVARX" <- function(m1,thres=1.0){
+"refVARX" <- function(m1, thres=1.0){
    zt=m1$data; xt=m1$xt
    p=m1$aror; m=m1$m; include.m=m1$include.mean
    beta=m1$coef; se.beta=m1$se.coef
@@ -6128,7 +6264,7 @@ LLKsvarma <- function(par,zt=DX,Order=Order,ARlags=arlags,MAlags=malags,include.
 
 ##### Prediction of VARX models.
 #####
-"VARXpred" <- function(m1,newxt=NULL,hstep=1,orig=0){
+"VARXpred" <- function(m1, newxt=NULL, hstep=1, orig=0, output=TRUE){
    #This program predicts the VARX model.
    ## z(t) = c0 + sum_{i=1}^p phi_i * z(t-i) + \sum_{j=0}^m xt(t-j) + a(t).
    ##
@@ -6186,21 +6322,23 @@ LLKsvarma <- function(par,zt=DX,Order=Order,ARlags=arlags,MAlags=malags,include.
          }
       }
       ### Print forecasts
-      cat("Prediction at origin: ",orig,"\n")
-      cat("Point forecasts (starting with step 1): ","\n")
-      print(round(nzt[(orig+1):(orig+hstep),],5))
-      cat("Corresponding standard errors: ","\n")
-      print(round(se[1:hstep,],5))
+      if (output) {
+         cat("Prediction at origin: ",orig,"\n")
+         cat("Point forecasts (starting with step 1): ","\n")
+         print(round(nzt[(orig+1):(orig+hstep),],5))
+         cat("Corresponding standard errors: ","\n")
+         print(round(se[1:hstep,],5))
+      }
 
    }
    else{
-      cat("Need new data for input variables!","\n")
+      if (output) cat("Need new data for input variables!","\n")
    }
    #
 return <- list(pred=nzt[(orig+1):(orig+hstep),],se=se[1:hstep,],orig=orig,h=hstep)
 }
 ############################
-"VARXorder" <- function(x,exog,maxp=13,maxm=3,output=T){
+"VARXorder" <- function(x, exog, maxp=13, maxm=3, output=T){
    # Compute the AIC, BIC, HQ values and M-stat
    ##### This is a modified version of the old program in "VARorderE",
    ##### which uses the same number of data points.
@@ -6214,10 +6352,10 @@ return <- list(pred=nzt[(orig+1):(orig+hstep),],se=se[1:hstep,],orig=orig,h=hste
    nT1=dim(exog)[1]; m=dim(exog)[2]
    #
    if(nT1 > nT){
-      cat("Adjustment made for different nobs:",c(nT,nT1), "\n")
+      if (output) cat("Adjustment made for different nobs:",c(nT,nT1), "\n")
    }
    if(nT > nT1){
-      cat("Adjustment made for different nobs:",c(nT,nT1),"\n")
+      if (output) cat("Adjustment made for different nobs:",c(nT,nT1),"\n")
       nT=nT1
    }
    ###
@@ -6305,7 +6443,7 @@ return <- list(pred=nzt[(orig+1):(orig+hstep),],se=se[1:hstep,],orig=orig,h=hste
  }
 
 #### Regression model with time series errors (Multivariate case)
-"REGts" <- function(zt,p,xt,include.mean=T,fixed=NULL,par=NULL,se.par=NULL,details=F){
+"REGts" <- function(zt, p, xt, include.mean=T, fixed=NULL, par=NULL, se.par=NULL, details=F){
    ## Fit a multivariate regression model with time series errors
    ### VAR model only.
    ### obtain preliminary estimation if needed.
@@ -6333,8 +6471,10 @@ return <- list(pred=nzt[(orig+1):(orig+hstep),],se=se[1:hstep,],orig=orig,h=hste
    r1=kx
    if(include.mean){r1=r1+1; kx=kx+1}
    r2=p*k
-   cat("Number of parameters: ",length(par),"\n")
-   cat("initial estimates: ",par,"\n")
+   if (output) {
+      cat("Number of parameters: ",length(par),"\n")
+      cat("initial estimates: ",par,"\n")
+   }
    ### Set up lower and upper bounds
    lowerBounds=par; upperBounds=par
    npar=length(par)
@@ -6344,8 +6484,10 @@ return <- list(pred=nzt[(orig+1):(orig+hstep),],se=se[1:hstep,],orig=orig,h=hste
       lowerBounds[j] = par[j]-mult*se.par[j]
       upperBounds[j] = par[j]+mult*se.par[j]
    }
-   cat("Par. Lower-bounds: ",lowerBounds,"\n")
-   cat("Par. Upper-bounds: ",upperBounds,"\n")
+   if (output) {
+      cat("Par. Lower-bounds: ",lowerBounds,"\n")
+      cat("Par. Upper-bounds: ",upperBounds,"\n")
+   }
 
  RegXmtx <- function(zt,xt,p,par,include.mean,fixed){
   nT <- dim(zt)[1]; k <- dim(zt)[2]; kx <- dim(xt)[2]
@@ -6431,15 +6573,17 @@ lRegts <- function(par,zt=zt,xt=xt,p=p,include.mean=include.mean,fixed=fixed){
       }
    }
    est=fit$par
-   cat("Final   Estimates: ",est,"\n")
    # Step 6: Create and Print Summary Report:
    se.coef = sqrt(diag(solve(Hessian)))
    tval = fit$par/se.coef
    matcoef = cbind(fit$par, se.coef, tval, 2*(1-pnorm(abs(tval))))
    dimnames(matcoef) = list(names(tval), c(" Estimate",
    " Std. Error", " t value", "Pr(>|t|)"))
-   cat("\nCoefficient(s):\n")
-   printCoefmat(matcoef, digits = 4, signif.stars = TRUE)
+   if (output) {
+      cat("Final   Estimates: ",est,"\n")
+      cat("\nCoefficient(s):\n")
+      printCoefmat(matcoef, digits = 4, signif.stars = TRUE)
+   }
    #
    ### Prepare parameters for printing
    beta=NULL; se.beta=NULL; Phi=NULL; se.Phi=NULL; icnt=0
@@ -6456,12 +6600,14 @@ lRegts <- function(par,zt=zt,xt=xt,p=p,include.mean=include.mean,fixed=fixed){
             icnt=icnt+ii
           }
        }
-      cat("======= ","\n")
-      cat("Coefficient matrix for constant + exogenous variable","\n")
-      cat("Estimates: ","\n")
-      print(round(t(beta),3))
-      cat("Standard errors: ","\n")
-      print(round(t(se.beta),3))
+      if (output) {
+         cat("======= ","\n")
+         cat("Coefficient matrix for constant + exogenous variable","\n")
+         cat("Estimates: ","\n")
+         print(round(t(beta),3))
+         cat("Standard errors: ","\n")
+         print(round(t(se.beta),3))
+      }
      }
    ### VAR parameters
    if(r2 > 0){
@@ -6477,30 +6623,34 @@ lRegts <- function(par,zt=zt,xt=xt,p=p,include.mean=include.mean,fixed=fixed){
             icnt=icnt+ii
           }
        }
-      cat("VAR coefficient matrices: ","\n")
+      if (output) cat("VAR coefficient matrices: ","\n")
       for (i in 1:p){
          kdx=(i-1)*k
-         cat("AR(",i,") coefficient: ","\n")
          phi=t(Phi[(kdx+1):(kdx+k),])
-         print(round(phi,3))
-         cat("standard errors:","\n")
          sephi=t(se.Phi[(kdx+1):(kdx+k),])
-         print(round(sephi,3))
+         if (output) {
+            cat("AR(",i,") coefficient: ","\n")
+            print(round(phi,3))
+            cat("standard errors:","\n")
+            print(round(sephi,3))
+         }
        }
     }
    ### compute the residuals
    m1=RegXmtx(zt,xt,p,est,include.mean,fixed)
    resi=m1$residuals
    sig=t(resi)%*%resi/(nT-p)
-   cat("Residual Covariance matrix: ","\n")
-   print(sig,digits=4)
    d1=log(det(sig))
    aic=d1+2*npar/(nT-p)
    bic=d1+log(nT-p)*npar/(nT-p)
-   cat("============","\n")
-   cat("Information criteria: ","\n")
-   cat("AIC: ",aic,"\n")
-   cat("BIC: ",bic,"\n")
+   if (output) {
+      cat("Residual Covariance matrix: ","\n")
+      print(sig,digits=4)
+      cat("============","\n")
+      cat("Information criteria: ","\n")
+      cat("AIC: ",aic,"\n")
+      cat("BIC: ",bic,"\n")
+   }
    #
    coef=rbind(beta,Phi)
    se.coef=rbind(se.beta,se.Phi)
@@ -6881,30 +7031,34 @@ lRegts <- function(par,zt=zt,xt=xt,p=p,include.mean=include.mean,fixed=fixed){
          zeroTbl[(m+1),(j+1)]=icnt
        }
      }
-   #### Print the output tables
-   cat("Column: MA order","\n")
-   cat("Row   : AR order","\n")
-   cat("Number of zero canonical correlations","\n")
    colnames(zeroTbl) <- c(c(0:maxq))
    rownames(zeroTbl) <- c(c(0:maxp))
-   printCoefmat(zeroTbl)
+   if (output) {
+      #### Print the output tables
+      cat("Column: MA order","\n")
+      cat("Row   : AR order","\n")
+      cat("Number of zero canonical correlations","\n")
+      printCoefmat(zeroTbl)
+   }
    diagDif=zeroTbl
    for (i in 1:maxp){
       for (j in 1:maxq){
          diagDif[(i+1),(j+1)]=min(zeroTbl[(i+1),(j+1)]-zeroTbl[i,j],k)
        }
     }
-   cat("Diagonal Differences: ","\n")
    colnames(diagDif) <- c(c(0:maxq))
    rownames(diagDif) <- c(c(0:maxp))
-   printCoefmat(diagDif)
+   if (output) {
+      cat("Diagonal Differences: ","\n")
+      printCoefmat(diagDif)
+   }
 
    SCMid <- list(Nmtx=zeroTbl,DDmtx=diagDif)
  }
 
 
 ##### Second-stage of specifiction ##################################################
-"SCMid2" <- function(zt,maxp=2,maxq=2,h=0,crit=0.05,sseq=NULL){
+"SCMid2" <- function(zt, maxp=2, maxq=2, h=0, crit=0.05, sseq=NULL, output=TRUE){
 ### Identify details of specified SCMs. This is a second-step specification.
 ### sseq denotes the sequence of orders (m,j) for searching SCMs.
 #### Written by Ruey Tsay in June 2012.
@@ -6969,7 +7123,7 @@ Pt=as.matrix(Pt)
 mcan=cancor(Ymt,Pt)
 corsq=mcan$cor^2
 #
-cat("For (pi,qi) = (",m,",",j,")","\n")
+if (output) cat("For (pi,qi) = (",m,",",j,")","\n")
 
 ### compute the variance of canonical correlations
 dsq=rep(1,k1)
@@ -7002,7 +7156,7 @@ chk1=chk^2/nT
 idx=c(1:k1)[corsq > chk1 ]
 dsq[idx]=1
 ###
-cat("Tests:","\n")
+if (output) cat("Tests:","\n")
 re=NULL
 ### Perform tests to check the number of SCMs at the (m,j)-position
 icnt=0
@@ -7022,10 +7176,12 @@ if(pv >= crit)icnt=icnt+1
 }
 re1=round(re,3)
 colnames(re1) <- c("Eigvalue","St.dev","Test","deg","p-value")
-print(re1)
-#
-cat("Summary:","\n")
-cat("Number of SCMs detected: ",icnt,"\n")
+if (output) {
+   print(re1)
+   #
+   cat("Summary:","\n")
+   cat("Number of SCMs detected: ",icnt,"\n")
+}
 Nscm[nc]=icnt; wk1 = NULL; n12=0
 ###
 #####cat("Nscm[nc]", Nscm[nc],"\n")
@@ -7044,8 +7200,10 @@ if((nc > 1) && (Jcnt > 0)){
      if((ndup >= 0) && (wcnt > 0)){
       leng=(m1+1)*k*wcnt
       wvector=matrix(wkspace[j1,1:leng],(m1+1)*k,wcnt)
-      cat("wvector","\n")
-      print(wvector,digits=3)
+      if (output) {
+         cat("wvector","\n")
+         print(wvector,digits=3)
+      }
       if(ndup == 0){
        if(m1==m){wk3=cbind(wk3,wvector)}
         else{tmp=rbind(wvector,matrix(0,(m-m1)*k,wcnt))
@@ -7067,7 +7225,7 @@ if((nc > 1) && (Jcnt > 0)){
 ###
      n12=dim(wk2)[2]
      if(icnt <= n12){
-      cat("No new SCM found.","\n")
+      if (output) cat("No new SCM found.","\n")
       ngenu = 0
       }
       else{
@@ -7080,10 +7238,12 @@ if((nc > 1) && (Jcnt > 0)){
         }
       wk=wk1%*%xcoef[,(n12+1):icnt]
       ngenu=icnt-n12
-      cat("The number of newly found SCMs: ",ngenu,"\n")
       wk1=wk
-      cat("Vectors: ","\n")
-      print(wk1,digits=3)
+      if (output) {
+         cat("The number of newly found SCMs: ",ngenu,"\n")
+         cat("Vectors: ","\n")
+         print(wk1,digits=3)
+      }
       }
 ###
 ##  Checking for possible exchangeable SCM
@@ -7105,7 +7265,7 @@ if((nc > 1) && (Jcnt > 0)){
         if(mchg$cor[ij] > 0.8){ich=ich+1}
         }
        if(ich > 0){
-        cat("Exchangeable SCM found with order: ", c(m1,j2),"\n")
+        if (output) cat("Exchangeable SCM found with order: ", c(m1,j2),"\n")
          iexch=iexch+ich
          }
         } # end of (m1+j2) == m+j
@@ -7132,12 +7292,14 @@ if((nc > 1) && (Jcnt > 0)){
 #####    cat("dim: ",c(ncol(Tmx),ncol(wk1)),"\n")
  } ### end of for-loop
 #
-   cat("SUMMARY:","\n")
-   cat("Overall model: ",apply(Order,2,max),"\n")
-   cat("Orders of SCM: ","\n")
-   print(Order)
-    cat("Transformation Matrix (Column): ","\n")
-    print(Tmx,digits=3)
+   if (output) {
+      cat("SUMMARY:","\n")
+      cat("Overall model: ",apply(Order,2,max),"\n")
+      cat("Orders of SCM: ","\n")
+      print(Order)
+      cat("Transformation Matrix (Column): ","\n")
+      print(Tmx,digits=3)
+   }
 
   SCMid2 <- list(Tmatrix = t(Tmx),SCMorder=Order)
 }
@@ -7219,7 +7381,7 @@ if((nc > 1) && (Jcnt > 0)){
  }
 
 #### SCM estimation
-"SCMfit" <- function(da,scms,Tdx,include.mean=T,fixed=NULL,prelim=F,details=F,thres=1.0,ref=0,SCMpar=NULL,seSCMpar=NULL){
+"SCMfit" <- function(da, scms, Tdx, include.mean=T, fixed=NULL, prelim=F, details=F, thres=1.0, ref=0, SCMpar=NULL, seSCMpar=NULL, output=TRUE){
    # Estimation of a vector ARMA model using conditional MLE (Gaussian dist)
    #  The model is specified via SCMs.
    #
@@ -7234,19 +7396,21 @@ if((nc > 1) && (Jcnt > 0)){
    nT=dim(da)[1]; k=dim(da)[2]
    p=max(scms[,1]); q=max(scms[,2]); pq=max(p,q); kp=k*p; kq=k*q
    pq=max(p,q)
-   cat("Maximum VARMA order: (",p,",",q,")","\n")
+   if (output) cat("Maximum VARMA order: (",p,",",q,")","\n")
       # Obtain the parameter specifications.
       mm1=SCMmod(scms,Tdx,FALSE)
       # Step 1: assign the data and locations of parameters globally
       locTmtx <- mm1$Tmtx; locAR <- mm1$ARpar; locMA <- mm1$MApar
       #
    if(ref < 1){
-      cat("Locations of estimable parameters: Transformation Matrix","\n")
-      print(locTmtx)
-      cat("AR parameters","\n")
-      print(locAR)
-      cat("MA parameters","\n")
-      print(locMA)
+      if (output) {
+         cat("Locations of estimable parameters: Transformation Matrix","\n")
+         print(locTmtx)
+         cat("AR parameters","\n")
+         print(locAR)
+         cat("MA parameters","\n")
+         print(locMA)
+      }
     }
  iniSCM <- function(da,at,scms,Tdx,locTmtx,locAR,locMA,inc.mean){
    ### The output parameters are in a vector:
@@ -7262,7 +7426,7 @@ if((nc > 1) && (Jcnt > 0)){
    ##   cat("iniSCM p and q: ",c(p,q),"\n")
    pq=p+q
    if(pq < 1){
-      cat("The series is white noise. No estimation is needed","\n")
+      if (output) cat("The series is white noise. No estimation is needed","\n")
    }
    ## est: stores the estimates (equation 1, equation 2, etc.)
    est=NULL
@@ -7361,16 +7525,19 @@ if((nc > 1) && (Jcnt > 0)){
    par=SCMpar[JJdx]
    separ= seSCMpar[JJdx]
    #########
-   cat("Number of parameters: ",length(par),"\n")
-   cat("initial estimates: ",round(par,4),"\n")
+
    ### Set up lower and upper bounds
    lowerBounds=par; upperBounds=par
    for (j in 1:length(par)){
       lowerBounds[j] = par[j]-2*separ[j]
       upperBounds[j] = par[j]+2*separ[j]
    }
-   cat("Upper-bound: ",round(upperBounds,4),"\n")
-   cat("Lower-bound: ",round(lowerBounds,4),"\n")
+   if (output) {
+      cat("Number of parameters: ",length(par),"\n")
+      cat("initial estimates: ",round(par,4),"\n")
+      cat("Upper-bound: ",round(upperBounds,4),"\n")
+      cat("Lower-bound: ",round(lowerBounds,4),"\n")
+   }
 
  LLSCM <- function(par,zt=da,scms=scms,Tdx=Tdx,SCMpar=SCMpar,JJdx=JJdx,include.mean=include.mean,fixed=fixed,locTmtx=locTmtx,locAR=locAR,locMA=locMA){
    k <- dim(zt)[2];  nT <- dim(zt)[1]
@@ -7518,8 +7685,10 @@ if((nc > 1) && (Jcnt > 0)){
    matcoef = cbind(fit$par, se.coef, tval, 2*(1-pnorm(abs(tval))))
    dimnames(matcoef) = list(names(tval), c(" Estimate",
    " Std. Error", " t value", "Pr(>|t|)"))
-   cat("\nCoefficient(s):\n")
-   printCoefmat(matcoef, digits = 4, signif.stars = TRUE)
+   if (output) {
+      cat("\nCoefficient(s):\n")
+      printCoefmat(matcoef, digits = 4, signif.stars = TRUE)
+   }
    SCMpar[JJdx]=fit$par
    seSCMpar[JJdx]=se.coef
    ##cat("SCMpar: ",round(SCMpar,3),"\n")
@@ -7573,31 +7742,37 @@ if((nc > 1) && (Jcnt > 0)){
       ### end of the i-loop
    }
    #########
-   cat("---","\n")
-   cat("Estimates in matrix form:","\n")
-   if(include.mean){
-      cat("Constant term: ","\n")
-      cat("Estimates: ",round(Cnt,3),"\n")
+   if (output) {
+      cat("---","\n")
+      cat("Estimates in matrix form:","\n")
+      if(include.mean){
+         cat("Constant term: ","\n")
+         cat("Estimates: ",round(Cnt,3),"\n")
+      }
+      cat("AR and MA lag-0 coefficient matrix","\n")
+      print(round(Ph0,3))
    }
-   cat("AR and MA lag-0 coefficient matrix","\n")
-   print(round(Ph0,3))
    jcnt=0
    if(p > 0){
-      cat("AR coefficient matrix","\n")
+      if (output) cat("AR coefficient matrix","\n")
       for (i in 1:p){
-         cat("AR(",i,")-matrix","\n")
          ph=PH[,(jcnt+1):(jcnt+k)]
-         print(round(ph,3))
+         if (output) {
+            cat("AR(",i,")-matrix","\n")
+            print(round(ph,3))
+         }
          jcnt=jcnt+k
       }
    }
    if(q > 0){
-      cat("MA coefficient matrix","\n")
+      if (output) cat("MA coefficient matrix","\n")
       icnt=0
       for (i in 1:q){
-         cat("MA(",i,")-matrix","\n")
          theta=-TH[,(icnt+1):(icnt+k)]
-         print(round(theta,3))
+         if (output) {
+            cat("MA(",i,")-matrix","\n")
+            print(round(theta,3))
+         }
          icnt=icnt+k
       }
    }
@@ -7677,9 +7852,6 @@ if((nc > 1) && (Jcnt > 0)){
    at=as.matrix(at[(ist:nT),])
    sig=crossprod(at,at)/(nT-pq)
    ##
-   cat(" ","\n")
-   cat("Residuals cov-matrix:","\n")
-   print(sig)
    dd=det(sig)
    d1=log(dd)
    ### adjusting for the number of parameters in T-matrix
@@ -7690,9 +7862,14 @@ if((nc > 1) && (Jcnt > 0)){
    }
    aic=d1+2*(npar-jj)/nT
    bic=d1+log(nT)*(npar-jj)/nT
-   cat("----","\n")
-   cat("aic= ",aic,"\n")
-   cat("bic= ",bic,"\n")
+   if (output) {
+      cat(" ","\n")
+      cat("Residuals cov-matrix:","\n")
+      print(sig)
+      cat("----","\n")
+      cat("aic= ",aic,"\n")
+      cat("bic= ",bic,"\n")
+   }
    TH1=NULL
    if(length(TH) > 0)TH1=-TH
 
@@ -7733,7 +7910,7 @@ if((nc > 1) && (Jcnt > 0)){
 
 
 ################### Co-integration part
-"ECMvar1" <- function(x,p,wt,include.const=FALSE,fixed=NULL,output=TRUE){
+"ECMvar1" <- function(x, p, wt, include.const=FALSE, fixed=NULL, output=TRUE){
    # Fits an error-correction VAR model.
    ### This program assumes the co-integrating process w(t) is known.
    ###
@@ -7796,7 +7973,7 @@ if((nc > 1) && (Jcnt > 0)){
       for (i in 1:k){
          idx=c(1:idm)[fixed[,i]==1]
          npi=length(idx)
-         cat("Equation: ",i," npar = ",npi,"\n")
+         if (output) cat("Equation: ",i," npar = ",npi,"\n")
          npar=npar+npi
          if(npi > 0){
             xm=xmtx[,idx]
@@ -7896,7 +8073,7 @@ if((nc > 1) && (Jcnt > 0)){
 }
 
 #####
-"ECMvar" <- function(x,p,ibeta,include.const=FALSE,fixed=NULL,alpha=NULL,se.alpha=NULL,se.beta=NULL,phip=NULL,se.phip=NULL){
+"ECMvar" <- function(x, p, ibeta, include.const=FALSE, fixed=NULL, alpha=NULL, se.alpha=NULL, se.beta=NULL, phip=NULL, se.phip=NULL, output=TRUE){
    # Fits an error-correction VAR model.
    ### This program assumes the co-integrating process w(t) is unknown.
    ### It is a refined version of ECMvar1.
@@ -7905,7 +8082,7 @@ if((nc > 1) && (Jcnt > 0)){
    if(!is.matrix(x))x=as.matrix(x)
    if(!is.matrix(ibeta))ibeta=as.matrix(ibeta)
    if(p < 1)p=1; m=dim(ibeta)[2]
-   cat("Order p: ",p," Co-integrating rank: ",m,"\n")
+   if (output) cat("Order p: ",p," Co-integrating rank: ",m,"\n")
    nT <- dim(x)[1]; k <- dim(x)[2]
    dx=x[2:nT,]-x[1:(nT-1),]
    dx=rbind(rep(0,k),dx)
@@ -7963,8 +8140,7 @@ if((nc > 1) && (Jcnt > 0)){
    m2=ECMxmtx(x,p,m,include.const)
    ECMy <- m2$y; ECMxm <- m2$xm
    ##
-   cat("Number of parameters: ",length(par),"\n")
-   cat("initial estimates: ",par,"\n")
+
    ### Set up lower and upper bounds
    lowerBounds=par; upperBounds=par
    mult=1.5
@@ -7972,8 +8148,12 @@ if((nc > 1) && (Jcnt > 0)){
       lowerBounds[j] = par[j]-mult*separ[j]
       upperBounds[j] = par[j]+mult*separ[j]
    }
-   cat("Par. Lower-bounds: ",lowerBounds,"\n")
-   cat("Par. Upper-bounds: ",upperBounds,"\n")
+   if (output) {
+      cat("Number of parameters: ",length(par),"\n")
+      cat("initial estimates: ",par,"\n")
+      cat("Par. Lower-bounds: ",lowerBounds,"\n")
+      cat("Par. Upper-bounds: ",upperBounds,"\n")
+   }
 
  LECMvar <- function(par,x=x,p=p,m=m,include.const=include.const,fixed=fixed,ECMy=ECMy,ECMxm=ECMxm){
    nT <- dim(x)[1]; k <- dim(x)[2]
@@ -8067,15 +8247,17 @@ if((nc > 1) && (Jcnt > 0)){
       }
    }
    est=fit$par
-   cat("Final   Estimates: ",est,"\n")
+   if (output) cat("Final   Estimates: ",est,"\n")
    # Step 6: Create and Print Summary Report:
    se.coef = sqrt(diag(solve(Hessian)))
    tval = fit$par/se.coef
    matcoef = cbind(fit$par, se.coef, tval, 2*(1-pnorm(abs(tval))))
    dimnames(matcoef) = list(names(tval), c(" Estimate",
    " Std. Error", " t value", "Pr(>|t|)"))
-   cat("\nCoefficient(s):\n")
-   printCoefmat(matcoef, digits = 4, signif.stars = TRUE)
+   if (output) {
+      cat("\nCoefficient(s):\n")
+      printCoefmat(matcoef, digits = 4, signif.stars = TRUE)
+   }
    ### print parameter estimates in the ECM model
    km=k*m
    kmm = (k-m)*m
@@ -8107,39 +8289,41 @@ if((nc > 1) && (Jcnt > 0)){
         }
       }
    }
-   cat("alpha: ","\n")
-   print(alpha,digits=3)
-   cat("standard error","\n")
-   print(se.alpha,digits=3)
-   cat("beta: ","\n")
-   print(beta,digits=3)
-   cat("standard error","\n")
-   print(se.beta,digits=3)
-   #
-   icnt=0
-   if(include.const){
-      cat("constant term:","\n")
-      print(phip[1,],digits=3)
-      se=se.phip[1,]
+   if (output) {
+      cat("alpha: ","\n")
+      print(alpha,digits=3)
       cat("standard error","\n")
-      print(se,digits=3)
-      icnt=1
-   }
-   ## AR coefficients if any
-   if(p > 1){
-      cat("AR coefficient matrix","\n")
-      jst=icnt
-      for (i in 1:(p-1)){
-         cat("AR(",i,")-matrix","\n")
-         phi=t(phip[(jst+1):(jst+k),])
-         se=t(se.phip[(jst+1):(jst+k),])
-         print(phi,digits=3)
+      print(se.alpha,digits=3)
+      cat("beta: ","\n")
+      print(beta,digits=3)
+      cat("standard error","\n")
+      print(se.beta,digits=3)
+      #
+      icnt=0
+      if(include.const){
+         cat("constant term:","\n")
+         print(phip[1,],digits=3)
+         se=se.phip[1,]
          cat("standard error","\n")
          print(se,digits=3)
-         jst=jst+k
-         ###cat("      ","\n")
+         icnt=1
       }
-      # end of printing AR coefficients
+      ## AR coefficients if any
+      if(p > 1){
+         cat("AR coefficient matrix","\n")
+         jst=icnt
+         for (i in 1:(p-1)){
+            cat("AR(",i,")-matrix","\n")
+            phi=t(phip[(jst+1):(jst+k),])
+            se=t(se.phip[(jst+1):(jst+k),])
+            print(phi,digits=3)
+            cat("standard error","\n")
+            print(se,digits=3)
+            jst=jst+k
+            ###cat("      ","\n")
+         }
+         # end of printing AR coefficients
+      }
    }
    ## compute the residual covariance matrix
    Pi=alpha%*%t(beta)
@@ -8147,18 +8331,22 @@ if((nc > 1) && (Jcnt > 0)){
    resi=ECMy-as.matrix(ECMxm)%*%Ome
    sse=t(resi)%*%resi/nT
    #
-   cat("-----","\n")
-   cat("Residuals cov-mtx:","\n")
-   print(sse)
-   #sse=sse*ne/nT
-   cat("      ","\n")
    dd=det(sse)
-   cat("det(sse) = ",dd,"\n")
    d1=log(dd)
    aic=d1+(2*npar)/nT
    bic=d1+log(nT)*npar/nT
-   cat("AIC = ",aic,"\n")
-   cat("BIC = ",bic,"\n")
+   if (output) {
+      cat("-----","\n")
+      cat("Residuals cov-mtx:","\n")
+      print(sse)
+      #sse=sse*ne/nT
+      cat("      ","\n")
+
+      cat("det(sse) = ",dd,"\n")
+
+      cat("AIC = ",aic,"\n")
+      cat("BIC = ",bic,"\n")
+   }
 
    ECMvar <-list(data=x,ncoint=m,arorder=p,include.const=include.const,alpha=alpha,se.alpha=se.alpha,beta=beta,se.beta=se.beta,aic=aic,bic=bic,residuals=resi,Phip=phip,se.Phip=se.phip,Sigma=sse)
 }
@@ -8193,7 +8381,7 @@ if((nc > 1) && (Jcnt > 0)){
 
 }
 
-"SWfore" <- function(y,x,orig,m){
+"SWfore" <- function(y, x, orig, m, output=TRUE){
    ### Performs Stock and Watson's diffusion index prediction
    ### y: dependent variable
    ### x: observed regressors
@@ -8232,7 +8420,7 @@ if((nc > 1) && (Jcnt > 0)){
       yhat=newx%*%coef
       err=y[(orig+1):nT]-yhat
       MSE=mean(err^2)
-      cat("MSE of out-of-sample forecasts: ",MSE,"\n")
+      if (output) cat("MSE of out-of-sample forecasts: ",MSE,"\n")
    }
 
    SWfore <- list(coef=coef,yhat=yhat,MSE=MSE,loadings=M1,DFindex=Dindex)
@@ -8265,7 +8453,7 @@ if((nc > 1) && (Jcnt > 0)){
 
 #### Constrained factor models of Tsai and Tsay (2011)
 ####
-"hfactor" <- function(X,H,r){
+"hfactor" <- function(X, H, r, output=TRUE){
    # Performs estimation of a constrained factor model. The data matrix is "X".
    # The column constraint matrix is H.
    # r: The number of common factor.
@@ -8280,19 +8468,21 @@ if((nc > 1) && (Jcnt > 0)){
    nT=nrow(X)
    m=ncol(H)
    x=X
-   print("Data are individually standardized")
+   if (output) print("Data are individually standardized")
    if(r < 1)r=1
    # standardized the data
    x=scale(X,center=TRUE,scale=TRUE)
    V1=cov(x)
    mpca=eigen(V1)
-   cat("First r eigenvalues of the correlation matrix: ","\n")
-   print(mpca$values[1:r])
    ratio=sum(mpca$values[1:r])/N
-   cat("Variability explained: ","\n")
-   print(ratio)
-   cat("Loadings: ","\n")
-   print(mpca$vectors[,1:r],digits=3)
+   if (output) {
+      cat("First r eigenvalues of the correlation matrix: ","\n")
+      print(mpca$values[1:r])
+      cat("Variability explained: ","\n")
+      print(ratio)
+      cat("Loadings: ","\n")
+      print(mpca$vectors[,1:r],digits=3)
+   }
 
    ## New version use square-root of (H'H)^{-1} and
    ## [(H'H)^{-1/2}H'X'][XH(H'H)^{-1/2}] to perform eigenvalues analysis
@@ -8303,8 +8493,10 @@ if((nc > 1) && (Jcnt > 0)){
    YH=Y%*%Mhinv
    D=t(YH)%*%YH/nT
    m1=eigen(D)
-   cat("eigenvalues of constrained part: ","\n")
-   print(m1$values,digits=3)
+   if (output) {
+      cat("eigenvalues of constrained part: ","\n")
+      print(m1$values,digits=3)
+   }
    d=m1$vectors[,1:r]
    Fhat=YH%*%d
    HPHi=Mhinv%*%Mhinv
@@ -8317,29 +8509,34 @@ if((nc > 1) && (Jcnt > 0)){
    }
 
    Omehat=HPHi%*%t(Y)%*%Fhat/nT
-   print("Omega-Hat")
-   print(Omehat,digits=3)
 
    HO=H%*%Omehat
    pro=sum(diag(t(HO)%*%HO))/N
-   cat("Variation explained by the constrained factors: ","\n")
-   print(pro)
-   cat("H*Omega: constrained loadings ","\n")
+   if (output) {
+      print("Omega-Hat")
+      print(Omehat,digits=3)
+      cat("Variation explained by the constrained factors: ","\n")
+      print(pro)
+      cat("H*Omega: constrained loadings ","\n")
+   }
    HOOH=HO%*%t(HO)
    Cload=HO
    dd=diag(t(HO)%*%HO)
    for (i in 1:r){
       Cload[,i]=HO[,i]/sqrt(dd[i])
    }
-   print(Cload,digits=3)
    Psi=V1-HOOH
-   print("Psi:")
-   print(Psi,digits=3)
    mpsi=eigen(Psi)
-   cat("Diagonal elements of Psi:","\n")
-   print(diag(Psi),digits=3)
-   cat("eigenvalues of Psi:","\n")
-   print(mpsi$values,digits=3)
+
+   if (output) {
+      print(Cload,digits=3)
+      print("Psi:")
+      print(Psi,digits=3)
+      cat("Diagonal elements of Psi:","\n")
+      print(diag(Psi),digits=3)
+      cat("eigenvalues of Psi:","\n")
+      print(mpsi$values,digits=3)
+   }
 
    list(Omega=Omehat,F=Fhat,Psi=Psi)
 }
@@ -8365,7 +8562,7 @@ if((nc > 1) && (Jcnt > 0)){
   msqrt <- list(mtxsqrt=Mh,invsqrt=Mhinv)
 }
 
-"BVAR" <- function(z,p=1,C,V0,n0=5,Phi0=NULL,include.mean=T){
+"BVAR" <- function(z, p=1, C, V0, n0=5, Phi0=NULL, include.mean=T, output=TRUE) {
 ## Perform Bayesian estimation of a VAR(p) model
 ##
 ## z: time series (T-by-k)
@@ -8409,10 +8606,12 @@ phi=c(Bbhat)
 se=sqrt(diag(SD))
 Est=cbind(phi,se,phi/se)
 colnames(Est) <- c("Est","s.e.","t-ratio")
-cat("Bayesian estimate:","\n")
-print(Est)
-cat("Covariance matrix: ","\n")
-print(BSig)
+if (output) {
+   cat("Bayesian estimate:","\n")
+   print(Est)
+   cat("Covariance matrix: ","\n")
+   print(BSig)
+}
 cnst=NULL; Bphi=NULL
 if(include.mean){
    cnst=Bbhat[1,]
@@ -8424,7 +8623,7 @@ BVAR <- list(phi0=cnst,Phi=Bphi,residuals=bAhat,Sigma=BSig,p=p,priorm=Phi0,preci
 }
 
 
-"comVol" <- function(rtn,m=10,p=1,stand=FALSE){
+"comVol" <- function(rtn, m=10, p=1, stand=FALSE, output=TRUE){
 # checking for common volatility components
 if(!is.matrix(rtn))rtn=as.matrix(rtn)
 # Fit a VAR(p) model to remove any serial correlations in the data.
@@ -8482,8 +8681,10 @@ A=A/(k*(k+1)/2)
 m2=eigen(A)
 Valu=m2$values
 Prop=Valu/sum(Valu)
-cat("eigen-values: ",Valu,"\n")
-cat("proportion:   ",Prop,"\n")
+if (output) {
+   cat("eigen-values: ",Valu,"\n")
+   cat("proportion:   ",Prop,"\n")
+}
 Vec=m2$vectors
 Mmtx=Shalf%*%Vec
 # normalize each column of Mmtx
@@ -8530,17 +8731,19 @@ mtst30=archTstC(Tx[,i],30)
 TT=c(TT,mtst30)
 Tst=rbind(Tst,c(i,TT))
 }
-cat("Checking: ","\n")
-cat("Results of individual F-test for ARCH effect","\n")
-cat("Numbers of lags used: 10, 20, 30","\n")
-cat("Component,(F-ratio P-val) (F-ratio P-val) (F-ratio P-Val)","\n")
-print(Tst,digits=3)
+if (output) {
+   cat("Checking: ","\n")
+   cat("Results of individual F-test for ARCH effect","\n")
+   cat("Numbers of lags used: 10, 20, 30","\n")
+   cat("Component,(F-ratio P-val) (F-ratio P-val) (F-ratio P-Val)","\n")
+   print(Tst,digits=3)
+}
 
 comVol <- list(residuals=x,values=m2$values,vectors=m2$vectors,M=Mmtx)
 }
 
 
-"GrangerTest" <- function (X, p = 1, include.mean = T, locInput=c(1))
+"GrangerTest" <- function (X, p = 1, include.mean = T, locInput=c(1), output=TRUE)
 {
     if (!is.matrix(X))X = as.matrix(X)
     Tn = dim(X)[1]
@@ -8600,15 +8803,14 @@ comVol <- list(residuals=x,values=m2$values,vectors=m2$vectors,M=Mmtx)
        }
     K = as.matrix(K)
     v = dim(K)[1]
-    cat("Number of targeted zero parameters: ", v, "\n")
+    if (output) cat("Number of targeted zero parameters: ", v, "\n")
     if (v > 0) {
         C2 = K %*% C1 %*% t(K)
         C2inv = solve(C2)
         tmp = C2inv %*% as.matrix(omega, v, 1)
         chi = sum(omega * tmp)
         pvalue = 1 - pchisq(chi, v)
-        cat("Chi-square test for Granger Causality and p-value: ", c(chi, pvalue),
-            "\n")
+        if (output) cat("Chi-square test for Granger Causality and p-value: ", c(chi, pvalue), "\n")
     }
 ### If p-value is large, perform the estimation of constrained model
  if(pvalue >= 0.05){
@@ -9030,7 +9232,7 @@ backtest <- list(origin = orig, error = err, forecasts = fcst,
 }
 
 ####
-"REGtspred" <- function(model,newxt,h=1,orig=0){
+"REGtspred" <- function(model, newxt, h=1, orig=0, output=TRUE){
 ### Compute the forecats of a fitted REGts model
 ### newxt: data matrix for the regressors in the forecasting period
 ### h: number of forecasts to be produced
@@ -9070,14 +9272,16 @@ for (t in (orig+1):(orig+h)){
 fcst <- wzt[(orig+1):(orig+h),]
 pred <- fcst + nxt%*%t(beta)
 ##
-cat("### Predictions of REGts Model ###","\n")
-cat("Predictions at forecast origin: ",orig,"\n")
-cat("Point forecasts: 1-step to",h,"-step","\n")
-print(round(pred,5))
-cat("Standard errors of predictions: ","\n")
-print(round(se.err,5))
-cat("RMSE of predictions: ","\n")
-print(round(rmse,5))
+if (output) {
+   cat("### Predictions of REGts Model ###","\n")
+   cat("Predictions at forecast origin: ",orig,"\n")
+   cat("Point forecasts: 1-step to",h,"-step","\n")
+   print(round(pred,5))
+   cat("Standard errors of predictions: ","\n")
+   print(round(se.err,5))
+   cat("RMSE of predictions: ","\n")
+   print(round(rmse,5))
+}
 
 REGtspred <- list(pred=pred,se.err=se.err,rmse=rmse,orig=orig)
 
@@ -9224,7 +9428,7 @@ mm <- VARMApred(mod,h=h,orig=orig)
 Kronpred <- list(pred=mm$pred,se.err=mm$se.err,orig=orig)
 }
 
-"Corner" <- function(y,x,Nrow=11,Ncol=7){
+"Corner" <- function(y, x, Nrow=11, Ncol=7) {
 ### compute the "corner-table" for output "y" and input "x".
 ### y: filtered dependent variable
 ### x: filtered input variable AND is supposed to be a white noise series
@@ -9271,8 +9475,10 @@ stbl <- tbl
 crit=2/sqrt(nT)
 tbl=cbind(c(1:Nrow)-1,tbl)
 colnames(tbl) <- c("r->",paste(c(1:Ncol)))
-cat("Corner Table: ","\n")
-print(round(tbl,3))
+if (output) {
+   cat("Corner Table: ","\n")
+   print(round(tbl,3))
+}
 for (i in 1:Nrow){
  for (j in 1:Ncol){
   if(abs(tbl[i,j+1]) <= crit){
@@ -9283,13 +9489,14 @@ for (i in 1:Nrow){
       }
    }
  }
-cat("\n")
-cat("Simplified Table: 2/sqrt(T): ","\n")
 J=paste(c(1:Nrow)-1)
 stbl=cbind(J,stbl)
 colnames(stbl) <- c("r->",paste(c(1:Ncol)))
-print(stbl)
-
+if (output) {
+   cat("\n")
+   cat("Simplified Table: 2/sqrt(T): ","\n")
+   print(stbl)
+}
 Corner <- list(cornor = tbl)
 }
 
